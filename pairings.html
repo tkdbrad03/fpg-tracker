@@ -93,7 +93,7 @@
       <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
         <!-- Unpaired -->
         <div class="col-span-1 bg-white p-4 rounded-xl shadow-lg h-full max-h-[80vh] overflow-y-auto">
-          <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">Unpaired Players (<span id="unpairedCount">0</span>)</h3>
+          <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">Unpaired Players (<span id="unpairedCount">0</span>)        </h3>
           <div id="unpairedContainer" class="space-y-2 player-drop-zone" data-group="unpaired" data-time="N/A"></div>
         </div>
         <!-- Tee Times -->
@@ -129,8 +129,11 @@
   <script type="module">
     // ================= CONFIG =================
     const FINAL_PAIRINGS_BIN_ID = '68f6557dae596e708f1f69d1';
+    
+    // ❌ THIS IS THE LIKELY SOURCE OF YOUR 404 ERROR. 
+    // The published link for this Google Sheet has probably expired, been deleted, or the sheet 
+    // was unpublished. You must generate a new published CSV link for your sheet.
     const CHECK_IN_API_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS6XoBTQryAiLHQzKVboT3zij3gekRO0ywjtEg6DGhgjkFzlkEdBe22RZ-f_1TZrs-qewzAWBipaG_B/pub?gid=907219414&single=true&output=csv";
-
 
 
     // ================ CONSTANTS ================
@@ -254,18 +257,6 @@
       if(key){ publishPairings(key); } else { openModal(); }
     }
 
-    // ======= GOOGLE SHEETS JSONP EXTRACTOR =======
-    function extractSheetData(jsonpText){
-      const start = jsonpText.indexOf('(')+1;
-      const end = jsonpText.lastIndexOf(')');
-      if(start>0 && end>start){
-        try{ return JSON.parse(jsonpText.substring(start,end)); }
-        catch(e){ console.error('Failed to parse inner JSON', e); return null; }
-      }
-      console.error('JSONP wrapper not found. Check API URL.');
-      return null;
-    }
-
     // ============== UI BUILDERS ==============
     function setupContainers(){
       teeTimeWrapper.innerHTML = '';
@@ -377,30 +368,42 @@
       statusElement.className = 'text-sm text-gray-600 mt-2';
 
       try {
-  const res = await fetch(CHECK_IN_API_URL, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await fetch(CHECK_IN_API_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
   
-  const raw = await res.text();
-  // ✅ CSV parsing for published Google Sheet
-  const lines = raw.trim().split('\n').filter(line => line.trim() !== '');
-  const rows = lines.slice(1).map(line => line.split(',').map(v => v.replace(/^"|"$/g, '')));
+        const raw = await res.text();
+        // ✅ CSV parsing for published Google Sheet. Assumes structure: Name,Handicap,ID
+        const lines = raw.trim().split('\n').filter(line => line.trim() !== '');
+        // NOTE: This simple split(',') can break if names contain commas (e.g., Doe, John). 
+        // Ensure your sheet data does not contain commas in the Name column for reliability.
+        const rows = lines.slice(1).map(line => line.split(',').map(v => v.replace(/^"|"$/g, '')));
 
-  if (rows.length === 0) {
-    throw new Error('No data rows found in the CSV.');
-  }
+        if (rows.length === 0) {
+          throw new Error('No data rows found in the CSV.');
+        }
 
-  allPlayers = rows.map((cols, i) => ({
-    id: cols[2] || `p${i}`,
-    name: cols[0] || 'Unknown',
-    handicap: parseFloat(cols[1]) || 0,
-    group: 'unpaired'
-  }));
+        // Filter to only upcoming rounds (today or later)
+const today = new Date();
+allPlayers = rows
+  .map((cols, i) => {
+    const dateStr = cols[3] || ''; // Assuming column 4 is "Round Date"
+    const roundDate = dateStr ? new Date(dateStr) : null;
 
-  statusElement.textContent = `✅ Successfully loaded ${allPlayers.length} players from live Google Sheet data.`;
-  statusElement.className = 'text-sm text-green-700 mt-2 font-medium';
-}
+    return {
+      id: cols[2] || `p${i}`,         // Column 3 (Index 2) = ID
+      name: cols[0] || 'Unknown',     // Column 1 (Index 0) = Name
+      handicap: parseFloat(cols[1]) || 0, // Column 2 (Index 1) = Handicap
+      roundDate,
+      group: 'unpaired'
+    };
+  })
+  .filter(p => !p.roundDate || p.roundDate >= today); // Keep only today or future
 
 
+
+        statusElement.textContent = `✅ Successfully loaded ${allPlayers.length} players from live Google Sheet data.`;
+        statusElement.className = 'text-sm text-green-700 mt-2 font-medium';
+      }
       catch(err){
         console.error('Error loading check-in data:', err);
         statusElement.textContent = `❌ Failed to load live data (${err.message}). Using fallback mock data.`;

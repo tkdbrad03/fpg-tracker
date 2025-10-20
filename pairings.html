@@ -1,372 +1,489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPG Current Pairings</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: transparent;
-            padding: 1rem;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #3c763d 0%, #2d5a2e 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 12px 12px 0 0;
-            text-align: center;
-        }
-        
-        .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1rem;
-        }
-        
-        .logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        .header h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .tagline {
-            color: #e6b800;
-            font-size: 1rem;
-        }
-        
-        .content {
-            background: white;
-            padding: 2rem;
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #6c757d;
-        }
-        
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            color: #3c763d;
-        }
-        
-        .empty-state h2 {
-            color: #3c763d;
-            margin-bottom: 1rem;
-        }
-        
-        .groups-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .group-card {
-            background: #f8f9fa;
-            border: 2px solid #3c763d;
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.2s;
-        }
-        
-        .group-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(60, 118, 61, 0.2);
-        }
-        
-        .group-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #3c763d;
-        }
-        
-        .group-name {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #2d5a2e;
-        }
-        
-        .tee-time {
-            background: #e6b800;
-            color: #000;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 0.875rem;
-        }
-        
-        .players-list {
-            margin-bottom: 1rem;
-        }
-        
-        .player-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid #3c763d;
-        }
-        
-        .player-item.scorekeeper {
-            background: #d4edda;
-            border-left-color: #e6b800;
-        }
-        
-        .player-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #3c763d;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 1rem;
-        }
-        
-        .player-item.scorekeeper .player-icon {
-            background: #e6b800;
-            color: #000;
-        }
-        
-        .player-info {
-            flex: 1;
-        }
-        
-        .player-name {
-            font-weight: bold;
-            color: #2d5a2e;
-            font-size: 1rem;
-        }
-        
-        .player-role {
-            font-size: 0.75rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-        
-        .scorekeepers-note {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .scorekeepers-note strong {
-            color: #856404;
-        }
-        
-        .app-link {
-            text-align: center;
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: #fffdf5;
-            border: 2px solid #e6b800;
-            border-radius: 12px;
-        }
-        
-        .app-link a {
-            display: inline-block;
-            background: #e6b800;
-            color: #000;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.125rem;
-            transition: all 0.2s;
-        }
-        
-        .app-link a:hover {
-            background: #d4a600;
-            transform: translateY(-2px);
-        }
-        
-        .published-date {
-            text-align: center;
-            color: #6c757d;
-            font-size: 0.875rem;
-            margin-top: 1.5rem;
-        }
-        
-        @media (max-width: 768px) {
-            .groups-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .group-header {
-                flex-direction: column;
-                gap: 0.5rem;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">
-                <img src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png" alt="FPG Logo">
-            </div>
-            <h1>FPG Current Pairings</h1>
-            <p class="tagline">Good Golf • Good Friends • Good Times</p>
-        </div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FPG Pairing Manager - ADMIN</title>
 
-        <div class="content">
-            <div id="pairings-container">
-                <div class="empty-state">
-                    <div class="empty-icon">-</div>
-                    <h2>No pairings available yet</h2>
-                    <p>Pairings will appear here once published by the tournament organizer.</p>
-                </div>
-            </div>
-        </div>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Brand colors for Tailwind utility classes
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'fpg-primary': '#3c763d',
+            'fpg-accent':  '#e6b800',
+            'fpg-success': '#d4edda'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    :root{
+      --fpg-primary:#3c763d;
+      --fpg-accent:#e6b800;
+      --fpg-success:#d4edda;
+      --gray-100:#f3f4f6;
+      --gray-600:#4b5563;
+      --drop-hover:#e9f7ec; /* light green for drop hover */
+    }
+    body{ font-family: 'Inter', sans-serif; }
+    .player-card{ cursor: grab; touch-action: none; }
+    .modal{ transition: opacity .2s ease-in-out; }
+    .player-drop-zone.over{ background-color: var(--drop-hover); }
+    .calculated-time{
+      background-color: var(--gray-100);
+      color: var(--gray-600);
+      cursor: not-allowed;
+      font-weight: 500;
+    }
+  </style>
+
+  <!-- (Not used; safe to keep/remove) -->
+  <script src="https://unpkg.com/@dnd-kit/core@6.0.0/dist/dnd-kit-core.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-4 sm:p-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+    <header class="text-center">
+      <!-- LOGO FIX -->
+      <img
+        src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
+        alt="FPG League Logo"
+        class="mx-auto h-16 w-auto mb-4"
+        onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png';"
+      />
+      <h1 class="text-4xl font-extrabold text-fpg-primary mb-2">FPG Pairing Manager</h1>
+      <p class="text-gray-600">Drag and drop players to create foursomes, then publish to the public viewer.</p>
+    </header>
+
+    <!-- Configuration and Status -->
+    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-fpg-primary">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Configuration & Status</h2>
+      <div class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+        <p class="text-sm font-medium text-gray-700">
+          BIN ID: <span id="binIdDisplay" class="font-mono text-fpg-primary">68f6557dae596e708f1f69d1</span>
+        </p>
+        <button onclick="clearMasterKey()" id="clearKeyButton" class="px-3 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full hover:bg-red-200 transition">
+          Clear Admin Key
+        </button>
+      </div>
+      <p id="statusMessage" class="text-sm text-gray-700 mt-2">Loading check-in data...</p>
     </div>
 
-    <script>
-        function loadPairings() {
-            const pairingsData = localStorage.getItem('fpg_pairings');
-            const container = document.getElementById('pairings-container');
-            
-            if (!pairingsData) {
-                // Show empty state
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">-</div>
-                        <h2>No pairings available yet</h2>
-                        <p>Pairings will appear here once published by the tournament organizer.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            try {
-                const data = JSON.parse(pairingsData);
-                const publishDate = new Date(data.date);
-                
-                let html = '<div class="groups-grid">';
-                
-                data.groups.forEach((group, index) => {
-                    html += `
-                        <div class="group-card">
-                            <div class="group-header">
-                                <div class="group-name">${group.name}</div>
-                                <div class="tee-time">${group.teeTime}</div>
-                            </div>
-                            
-                            <div class="players-list">
-                                ${group.players.map((player, pIndex) => {
-                                    const isKeeper1 = group.scorekeepers[0] === player;
-                                    const isKeeper2 = group.scorekeepers[1] === player;
-                                    const isScorekeeper = isKeeper1 || isKeeper2;
-                                    
-                                    return `
-                                        <div class="player-item ${isScorekeeper ? 'scorekeeper' : ''}">
-                                            <div class="player-icon">${player.charAt(0)}</div>
-                                            <div class="player-info">
-                                                <div class="player-name">${player}</div>
-                                                ${isScorekeeper ? 
-                                                    `<div class="player-role">Scorekeeper ${isKeeper1 ? '1' : '2'}</div>` : 
-                                                    '<div class="player-role">Player</div>'
-                                                }
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                            
-                            ${group.scorekeepers[0] || group.scorekeepers[1] ? `
-                                <div class="scorekeepers-note">
-                                    <strong>Scorekeepers:</strong> ${group.scorekeepers[0] || 'TBD'} & ${group.scorekeepers[1] || 'TBD'}
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-                
-                html += '</div>';
-                
-                // Add app link
-                html += `
-                    <div class="app-link">
-                        <p style="margin-bottom: 1rem; color: #856404; font-weight: bold;">Scorekeepers: Open the app to enter scores!</p>
-                        <a href="https://tkdbrad03.github.io/fpg-tracker/" target="_blank">
-                            Open Scorekeeper App →
-                        </a>
-                    </div>
-                `;
-                
-                // Add published date
-                html += `
-                    <div class="published-date">
-                        Published ${publishDate.toLocaleString('en-US', { 
-                            weekday: 'long', 
-                            month: 'long', 
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit'
-                        })}
-                    </div>
-                `;
-                
-                container.innerHTML = html;
-                
-            } catch (error) {
-                console.error('Error loading pairings:', error);
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">!</div>
-                        <h2>Error loading pairings</h2>
-                        <p>Please try refreshing the page.</p>
-                    </div>
-                `;
-            }
+    <!-- Tee Time Configuration Panel -->
+    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-fpg-accent">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Weekly Tee Time Configuration</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <input type="text" id="time-0" placeholder="Start Time (e.g., 9:00 AM)" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-fpg-accent focus:border-fpg-accent" onchange="calculateTeeTimes()" />
+        <input type="text" id="time-1" placeholder="Time 2 (+8 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
+        <input type="text" id="time-2" placeholder="Time 3 (+16 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
+        <input type="text" id="time-3" placeholder="Time 4 (+24 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
+      </div>
+      <p id="timeStatus" class="text-sm text-gray-500 mt-3">Times loaded from your previous session.</p>
+    </div>
+
+    <!-- Pairing Interface -->
+    <div class="grid grid-cols-1 md:col-span-5 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <!-- Unpaired -->
+        <div class="col-span-1 bg-white p-4 rounded-xl shadow-lg h-full max-h-[80vh] overflow-y-auto">
+          <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">Unpaired Players (<span id="unpairedCount">0</span>)</h3>
+          <div id="unpairedContainer" class="space-y-2 player-drop-zone" data-group="unpaired" data-time="N/A"></div>
+        </div>
+        <!-- Tee Times -->
+        <div id="teeTimeContainer" class="col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+      </div>
+    </div>
+
+    <!-- Publish -->
+    <div class="text-center pt-4">
+      <button onclick="checkAndPublish()" id="publishButton"
+        class="px-10 py-4 bg-fpg-accent text-white font-semibold text-lg rounded-xl shadow-xl hover:bg-green-700 transition duration-150 ease-in-out disabled:opacity-50">
+        Publish Pairings to Public Viewer
+      </button>
+    </div>
+  </div>
+
+  <!-- Master Key Modal -->
+  <div id="keyModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center opacity-0 pointer-events-none z-50">
+    <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm transform transition-all scale-95">
+      <h3 class="text-xl font-bold mb-4 text-red-600">Admin Authentication Required</h3>
+      <p class="text-sm text-gray-700 mb-4">
+        To securely update the pairings, please enter the <strong>jsonbin.io Master Key</strong>. This key is saved in your browser’s local storage for future use.
+      </p>
+      <input type="password" id="masterKeyInput" placeholder="Master Key (e.g., $2a$10$QW...)"
+        class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-fpg-primary focus:border-fpg-primary" />
+      <div class="flex justify-end space-x-3">
+        <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition">Cancel</button>
+        <button onclick="authenticateAndPublish()" id="authButton" class="px-4 py-2 bg-fpg-primary text-white font-medium rounded-lg hover:bg-fpg-accent transition">Authenticate & Publish</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ================= CONFIG =================
+    const FINAL_PAIRINGS_BIN_ID = '68f6557dae596e708f1f69d1';
+    const CHECK_IN_API_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS6XoBTQryAiLHQzKVboT3zji3gekROOywjtEg6DGhgjkFzlkEdBe22RZ-f_1TZrs-qewzAWBipaG_B/pub?gid=907219414&single=true&output=csv';
+
+
+
+    // ================ CONSTANTS ================
+    const DEFAULT_TEE_TIMES = ['9:00 AM', '9:08 AM', '9:16 AM', '9:24 AM'];
+    const MAX_PLAYERS_PER_GROUP = 4;
+    const TEE_TIME_INTERVAL = 8; // minutes
+    const LOCAL_STORAGE_KEY = 'fpg_master_key';
+    const LOCAL_STORAGE_TIMES_KEY = 'fpg_tee_times';
+
+    let currentTeeTimes = [...DEFAULT_TEE_TIMES];
+    let allPlayers = [];
+
+    const statusElement = document.getElementById('statusMessage');
+    const unpairedContainer = document.getElementById('unpairedContainer');
+    const teeTimeWrapper = document.getElementById('teeTimeContainer');
+    const publishButton = document.getElementById('publishButton');
+    const keyModal = document.getElementById('keyModal');
+    const timeStatusElement = document.getElementById('timeStatus');
+
+    // ============== TIME HELPERS ==============
+    function parseTime(timeStr){
+      const today = new Date();
+      const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+      if(!match) return null;
+      let [_, h, m, ap] = match;
+      h = parseInt(h,10); m = parseInt(m,10);
+      if(ap){
+        if(ap.toLowerCase()==='pm' && h<12) h+=12;
+        else if(ap.toLowerCase()==='am' && h===12) h=0;
+      }else if(h<7){ h+=12; }
+      today.setHours(h,m,0,0);
+      return today;
+    }
+    function formatTime(date){
+      if(!date) return '';
+      let h = date.getHours();
+      const m = date.getMinutes();
+      const ap = h>=12?'PM':'AM';
+      h = h%12; h = h? h:12;
+      const mm = m<10? '0'+m : m;
+      return `${h}:${mm} ${ap}`;
+    }
+
+    // ============ TEE TIME MANAGEMENT ============
+    function calculateTeeTimes(){
+      const startTimeInput = document.getElementById('time-0');
+      const startTimeStr = startTimeInput.value.trim();
+      const startDate = parseTime(startTimeStr);
+      const newTimes = [];
+
+      if(!startDate || startTimeStr===''){
+        newTimes.push(startTimeStr || '');
+        for(let i=1;i<4;i++) newTimes.push('');
+        timeStatusElement.textContent = 'Please enter a valid start time (e.g., 9:00 AM).';
+        timeStatusElement.className = 'text-sm mt-3 font-medium text-red-500';
+      } else {
+        let t = new Date(startDate.getTime() - TEE_TIME_INTERVAL*60*1000);
+        for(let i=0;i<4;i++){
+          t.setMinutes(t.getMinutes()+TEE_TIME_INTERVAL);
+          newTimes.push(formatTime(t));
         }
-        
-        // Load pairings on page load
-        loadPairings();
-        
-        // Listen for storage changes (in case pairings are updated in another tab)
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'fpg_pairings') {
-                loadPairings();
-            }
+        timeStatusElement.textContent = 'Tee times calculated and saved successfully to this browser!';
+        timeStatusElement.className = 'text-sm mt-3 font-medium text-green-700';
+      }
+
+      newTimes.forEach((time, i)=>{
+        const el = document.getElementById(`time-${i}`);
+        if(el) el.value = time;
+      });
+
+      localStorage.setItem(LOCAL_STORAGE_TIMES_KEY, JSON.stringify(newTimes));
+      currentTeeTimes = newTimes;
+
+      setupContainers();
+      if(allPlayers.length>0) renderPlayers();
+    }
+    function loadTeeTimes(){
+      const saved = localStorage.getItem(LOCAL_STORAGE_TIMES_KEY);
+      let times = DEFAULT_TEE_TIMES;
+      if(saved){
+        try{ times = JSON.parse(saved); }catch{ localStorage.removeItem(LOCAL_STORAGE_TIMES_KEY); }
+      }
+      const startInput = document.getElementById('time-0');
+      if(startInput) startInput.value = times[0] || '';
+      calculateTeeTimes();
+      timeStatusElement.textContent = saved ? 'Times loaded from your previous session.' : 'Using default times. Edit the Start Time above to calculate others.';
+    }
+
+    // ============== KEY & MODAL ==============
+    function getMasterKey(){ return localStorage.getItem(LOCAL_STORAGE_KEY); }
+    function setMasterKey(k){ localStorage.setItem(LOCAL_STORAGE_KEY, k); }
+    function clearMasterKey(){
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      statusElement.textContent = 'Admin Key successfully cleared from this browser.';
+      statusElement.className = 'text-center font-medium text-green-700';
+    }
+    function openModal(){
+      keyModal.classList.remove('opacity-0','pointer-events-none');
+      keyModal.querySelector('div').classList.remove('scale-95');
+      document.getElementById('masterKeyInput').value = getMasterKey() || '';
+    }
+    function closeModal(){
+      keyModal.classList.add('opacity-0','pointer-events-none');
+      keyModal.querySelector('div').classList.add('scale-95');
+    }
+    async function authenticateAndPublish(){
+      const input = document.getElementById('masterKeyInput');
+      const key = input.value.trim();
+      if(!key || key.length<10){
+        input.classList.add('border-red-500');
+        statusElement.textContent = 'Error: Please enter a valid key.';
+        return;
+      }
+      input.classList.remove('border-red-500');
+      setMasterKey(key);
+      closeModal();
+      await publishPairings(key);
+    }
+    function checkAndPublish(){
+      const key = getMasterKey();
+      if(key){ publishPairings(key); } else { openModal(); }
+    }
+
+    // ======= GOOGLE SHEETS JSONP EXTRACTOR =======
+    function extractSheetData(jsonpText){
+      const start = jsonpText.indexOf('(')+1;
+      const end = jsonpText.lastIndexOf(')');
+      if(start>0 && end>start){
+        try{ return JSON.parse(jsonpText.substring(start,end)); }
+        catch(e){ console.error('Failed to parse inner JSON', e); return null; }
+      }
+      console.error('JSONP wrapper not found. Check API URL.');
+      return null;
+    }
+
+    // ============== UI BUILDERS ==============
+    function setupContainers(){
+      teeTimeWrapper.innerHTML = '';
+      currentTeeTimes.forEach((time, idx)=>{
+        const el = document.createElement('div');
+        el.id = `group-container-${idx}`;
+        el.className = 'bg-white p-4 rounded-xl shadow-lg space-y-2 border border-gray-200 h-full';
+        el.innerHTML = `
+          <h4 class="text-md font-extrabold text-fpg-primary mb-3 border-b pb-2">
+            Tee Time ${time} <span class="text-sm font-normal text-gray-500">(Group ${idx+1})</span>
+          </h4>
+          <div class="player-drop-zone h-full min-h-[100px] space-y-2" data-time="${time}" data-group="${idx}"></div>
+        `;
+        teeTimeWrapper.appendChild(el);
+      });
+    }
+    function renderPlayers(){
+      unpairedContainer.innerHTML = '';
+      document.querySelectorAll('.player-drop-zone').forEach(z=>{
+        if(z.getAttribute('data-group')!=='unpaired') z.innerHTML='';
+      });
+      document.getElementById('unpairedCount').textContent =
+        allPlayers.filter(p=>p.group==='unpaired').length;
+
+      allPlayers.forEach(p=>{
+        const card = document.createElement('div');
+        card.id = `player-${p.id}`;
+        card.draggable = true;
+        card.className = 'player-card p-3 bg-fpg-primary/10 border border-fpg-primary/50 rounded-lg text-sm font-semibold hover:bg-fpg-primary/20 transition duration-100 shadow-sm';
+        card.textContent = `${p.name} (HCP: ${p.handicap})`;
+        card.setAttribute('data-id', p.id);
+
+        const target = p.group==='unpaired'
+          ? unpairedContainer
+          : document.querySelector(`.player-drop-zone[data-group="${p.group}"]`);
+
+        (target || unpairedContainer).appendChild(card);
+        if(!target) p.group='unpaired';
+      });
+    }
+
+    // ============== DND (native) ==============
+    function initDnd(){
+      const dragstart = (e)=>{
+        if(!e.target.classList.contains('player-card')) return;
+        e.dataTransfer.setData('text/plain', e.target.getAttribute('data-id'));
+        e.target.classList.add('opacity-50','border-dashed','border-4','border-red-400');
+      };
+      const dragover = (e)=>{
+        e.preventDefault();
+        const zone = e.target.closest('.player-drop-zone'); if(zone) zone.classList.add('over');
+      };
+      const dragenter = (e)=>{
+        const zone = e.target.closest('.player-drop-zone'); if(zone) zone.classList.add('over');
+      };
+      const dragleave = (e)=>{
+        const zone = e.target.closest('.player-drop-zone'); if(zone) zone.classList.remove('over');
+      };
+      const drop = (e)=>{
+        e.preventDefault();
+        const zone = e.target.closest('.player-drop-zone'); if(!zone) return;
+        zone.classList.remove('over');
+
+        const playerId = e.dataTransfer.getData('text/plain');
+        const card = document.getElementById(`player-${playerId}`);
+        const targetGroupId = zone.getAttribute('data-group');
+
+        const currentCount = Array.from(zone.children).filter(el=>el.classList.contains('player-card')).length;
+        if(targetGroupId!=='unpaired' && currentCount >= MAX_PLAYERS_PER_GROUP){
+          statusElement.textContent = `Group ${parseInt(targetGroupId,10)+1} is full (max ${MAX_PLAYERS_PER_GROUP} players).`;
+          statusElement.classList.add('text-red-600','font-bold');
+          return;
+        }
+
+        const idx = allPlayers.findIndex(p=>p.id===playerId);
+        if(idx>-1) allPlayers[idx].group = targetGroupId;
+
+        zone.appendChild(card);
+        statusElement.textContent = 'Pairing updated.';
+        statusElement.classList.remove('text-red-600','font-bold');
+        document.getElementById('unpairedCount').textContent =
+          allPlayers.filter(p=>p.group==='unpaired').length;
+      };
+      const dragend = (e)=>{
+        if(e.target && e.target.classList) e.target.classList.remove('opacity-50','border-dashed','border-4','border-red-400');
+        document.querySelectorAll('.player-drop-zone').forEach(z=>z.classList.remove('over'));
+      };
+
+      document.addEventListener('dragstart', dragstart);
+      document.addEventListener('dragover', dragover);
+      document.addEventListener('dragenter', dragenter);
+      document.addEventListener('dragleave', dragleave);
+      document.addEventListener('drop', drop);
+      document.addEventListener('dragend', dragend);
+    }
+
+    // ============== DATA LOAD ==============
+    async function loadCheckinData(){
+      document.getElementById('binIdDisplay').textContent = FINAL_PAIRINGS_BIN_ID;
+      loadTeeTimes();
+
+      // Fallback mock data (used only if live fetch fails)
+      const mockNames = ['Joe','Sarah','Mike','Karen','David','Lisa','Tom','Amy','Sam','Ella','Ben','Chloe','Ryan','Zoe','Mark'];
+      const mockPlayers = mockNames.map((name,i)=>({
+        id:`p${i}`, name, group:'unpaired', handicap: Math.floor(Math.random()*25)+5
+      }));
+
+      statusElement.textContent = 'Attempting to fetch live player check-in data from Google Sheet...';
+      statusElement.className = 'text-sm text-gray-600 mt-2';
+
+      try {
+  const res = await fetch(CHECK_IN_API_URL, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  
+  const raw = await res.text();
+  // ✅ CSV parsing for published Google Sheet
+  const lines = raw.trim().split('\n').filter(line => line.trim() !== '');
+  const rows = lines.slice(1).map(line => line.split(',').map(v => v.replace(/^"|"$/g, '')));
+
+  if (rows.length === 0) {
+    throw new Error('No data rows found in the CSV.');
+  }
+
+  allPlayers = rows.map((cols, i) => ({
+    id: cols[2] || `p${i}`,
+    name: cols[0] || 'Unknown',
+    handicap: parseFloat(cols[1]) || 0,
+    group: 'unpaired'
+  }));
+
+  statusElement.textContent = `✅ Successfully loaded ${allPlayers.length} players from live Google Sheet data.`;
+  statusElement.className = 'text-sm text-green-700 mt-2 font-medium';
+}
+
+
+      catch(err){
+        console.error('Error loading check-in data:', err);
+        statusElement.textContent = `❌ Failed to load live data (${err.message}). Using fallback mock data.`;
+        statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
+        allPlayers = mockPlayers;
+      }
+
+      renderPlayers();
+      initDnd();
+    }
+
+    // ============== PUBLISH ==============
+    async function publishPairings(masterKey){
+      // Allow your actual ID. Only block if empty/placeholder.
+      if(!FINAL_PAIRINGS_BIN_ID || FINAL_PAIRINGS_BIN_ID === 'YOUR_BIN_ID_HERE'){
+        statusElement.textContent = 'Error: Please set your FINAL_PAIRINGS_BIN_ID.';
+        statusElement.className = 'text-center font-medium text-red-600';
+        return;
+      }
+      if(currentTeeTimes.some(t=>!t || t.trim()==='')){
+        statusElement.textContent = 'Warning: Tee times are not fully set. Please enter a valid start time.';
+        statusElement.className = 'text-center font-medium text-orange-500';
+        return;
+      }
+
+      const finalPairings = [];
+      currentTeeTimes.forEach((time, idx)=>{
+        const players = allPlayers.filter(p=>p.group === String(idx));
+        if(players.length>0){
+          finalPairings.push({
+            tee_time: time,
+            group_number: idx+1,
+            players: players.map(p=>({ name:p.name, handicap:p.handicap, id:p.id }))
+          });
+        }
+      });
+
+      const PUBLISH_URL = `https://api.jsonbin.io/v3/b/${FINAL_PAIRINGS_BIN_ID}`;
+
+      statusElement.textContent = 'Publishing... Please wait.';
+      statusElement.className = 'text-center font-medium text-gray-600';
+      publishButton.disabled = true;
+
+      try{
+        const resp = await fetch(PUBLISH_URL, {
+          method:'PUT',
+          headers:{
+            'Content-Type':'application/json',
+            'X-Master-Key': masterKey
+          },
+          body: JSON.stringify(finalPairings)
         });
-        
-        // Refresh every 30 seconds
-        setInterval(loadPairings, 30000);
-    </script>
+        if(!resp.ok){
+          try{
+            const det = await resp.json();
+            console.warn('Server response:', det);
+          }catch{}
+          if(resp.status===401){ clearMasterKey(); }
+          throw new Error(`Server rejected the request (Status: ${resp.status}). Key may be invalid or expired. Re-authenticate.`);
+        }
+        statusElement.textContent = '✅ Successfully Published! Pairings are live.';
+        statusElement.className = 'text-center font-medium text-green-700';
+      }catch(err){
+        console.error('Publish failed:', err);
+        statusElement.textContent = `❌ Publish failed! Error: ${err.message}`;
+        statusElement.className = 'text-center font-medium text-red-600';
+      }finally{
+        publishButton.disabled = false;
+      }
+    }
+
+    // Expose for HTML handlers
+    window.publishPairings = publishPairings;
+    window.checkAndPublish = checkAndPublish;
+    window.authenticateAndPublish = authenticateAndPublish;
+    window.closeModal = closeModal;
+    window.clearMasterKey = clearMasterKey;
+    window.calculateTeeTimes = calculateTeeTimes;
+
+    document.addEventListener('DOMContentLoaded', loadCheckinData);
+  </script>
 </body>
 </html>
+
+
+

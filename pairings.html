@@ -117,7 +117,7 @@
     </div>
   </div>
 
-  <script type="module">
+ <script type="module">
     // ================= CONFIG =================
     const FINAL_PAIRINGS_BIN_ID = '68f6557dae596e708f1f69d1';
     
@@ -255,6 +255,7 @@
         if (!groupZone) return;
 
         // Collect player names currently in this group
+        // 🛠️ FIX: Only count children with the 'player-card' class
         const playerCards = Array.from(groupZone.querySelectorAll('.player-card'));
         const players = playerCards.map(card => card.textContent.trim());
 
@@ -292,8 +293,9 @@ function setupContainers() {
   currentTeeTimes.forEach((time, idx) => {
     const el = document.createElement('div');
     el.id = `group-container-${idx}`;
-    // 🛠️ Adjusted h-full to flex-col and overflow-hidden to accommodate fixed-height footer
-    el.className = 'bg-white p-4 rounded-xl shadow-lg border border-gray-200 flex flex-col';
+    // 🛠️ CSS FIX: Use h-full to ensure containers fill the height, 
+    // flex-col and justify-between for better vertical layout/spacing
+    el.className = 'bg-white p-4 rounded-xl shadow-lg border border-gray-200 flex flex-col h-full'; 
     
     // 1. Header
     el.innerHTML = `
@@ -304,7 +306,8 @@ function setupContainers() {
 
     // 2. Player Drop Zone (takes remaining vertical space)
     const dropZone = document.createElement('div');
-    dropZone.className = 'player-drop-zone flex-grow space-y-2 mb-3 min-h-[100px] overflow-y-auto'; // Add overflow-y-auto to drop zone
+    // 🛠️ CSS FIX: Use flex-grow for vertical expansion and space-y-2 for vertical player card spacing
+    dropZone.className = 'player-drop-zone flex-grow space-y-2 mb-3 min-h-[100px] overflow-y-auto'; 
     dropZone.setAttribute('data-time', time);
     dropZone.setAttribute('data-group', idx);
     el.appendChild(dropZone);
@@ -312,13 +315,14 @@ function setupContainers() {
 
     // 3. Scorekeeper Dropdowns (fixed at the bottom)
     const dropdowns = document.createElement('div');
-    dropdowns.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 space-y-2 flex-shrink-0';
+    // 🛠️ CSS FIX: Adjusted padding and spacing for a tighter look
+    dropdowns.className = 'bg-gray-50 p-2 rounded-lg border border-gray-200 space-y-1 flex-shrink-0'; 
     dropdowns.innerHTML = `
       <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
         Scorekeeper 1
       </label>
       <select id="scorekeeper1-${idx}" 
-                class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                class="w-full border border-gray-300 rounded-lg p-1 text-sm">
         <option value="">Select Player</option>
       </select>
 
@@ -326,7 +330,7 @@ function setupContainers() {
         Scorekeeper 2
       </label>
       <select id="scorekeeper2-${idx}" 
-                class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                class="w-full border border-gray-300 rounded-lg p-1 text-sm">
         <option value="">Select Player</option>
       </select>
     `;
@@ -394,7 +398,10 @@ function setupContainers() {
         const card = document.getElementById(`player-${playerId}`);
         const targetGroupId = zone.getAttribute('data-group');
 
-        const currentCount = Array.from(zone.children).filter(el=>el.classList.contains('player-card')).length;
+        // 🛠️ BUG FIX: The previous count calculation was incorrect.
+        // It was counting *all* children, not just existing player cards.
+        const currentCount = zone.querySelectorAll('.player-card').length; 
+
         if(targetGroupId!=='unpaired' && currentCount >= MAX_PLAYERS_PER_GROUP){
           statusElement.textContent = `Group ${parseInt(targetGroupId,10)+1} is full (max ${MAX_PLAYERS_PER_GROUP} players).`;
           statusElement.classList.add('text-red-600','font-bold');
@@ -421,8 +428,6 @@ function setupContainers() {
 
       document.addEventListener('dragstart', dragstart);
       document.addEventListener('dragover', dragover);
-      // document.addEventListener('dragenter', dragenter);
-      // document.addEventListener('dragleave', dragleave);
       document.addEventListener('drop', drop);
       document.addEventListener('dragend', dragend);
     }
@@ -495,35 +500,6 @@ try {
   statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
   allPlayers = mockPlayers;
 }
-// 🛑 THIS SECTION WAS MOVED TO THE TOP-LEVEL SCOPE TO BE ACCESSIBLE TO THE DROPS
-/*
-function updateScorekeeperDropdowns() {
-  currentTeeTimes.forEach((time, idx) => {
-    const groupZone = document.querySelector(`.player-drop-zone[data-group="${idx}"]`);
-    if (!groupZone) return;
-
-    // Collect player names currently in this group
-    const playerCards = Array.from(groupZone.querySelectorAll('.player-card'));
-    const players = playerCards.map(card => card.textContent.trim());
-
-    // Get the dropdowns for this group
-    const scorekeeper1 = document.getElementById(`scorekeeper1-${idx}`);
-    const scorekeeper2 = document.getElementById(`scorekeeper2-${idx}`);
-
-    // Reset and populate each dropdown
-    [scorekeeper1, scorekeeper2].forEach(select => {
-      if (!select) return;
-      select.innerHTML = '<option value="">Select Player</option>';
-      players.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
-      });
-    });
-  });
-}
-*/
 
       renderPlayers();
       initDnd();

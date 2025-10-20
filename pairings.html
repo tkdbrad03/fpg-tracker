@@ -286,7 +286,7 @@
         card.id = `player-${p.id}`;
         card.draggable = true;
         card.className = 'player-card p-3 bg-fpg-primary/10 border border-fpg-primary/50 rounded-lg text-sm font-semibold hover:bg-fpg-primary/20 transition duration-100 shadow-sm';
-        card.textContent = `${p.name} (HCP: ${p.handicap})`;
+        card.textContent = p.name;
         card.setAttribute('data-id', p.id);
 
         const target = p.group==='unpaired'

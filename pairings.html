@@ -367,49 +367,60 @@
       statusElement.textContent = 'Attempting to fetch live player check-in data from Google Sheet...';
       statusElement.className = 'text-sm text-gray-600 mt-2';
 
-      try {
-        const res = await fetch(CHECK_IN_API_URL, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  
-        const raw = await res.text();
-        // ✅ CSV parsing for published Google Sheet. Assumes structure: Name,Handicap,ID
-        const lines = raw.trim().split('\n').filter(line => line.trim() !== '');
-        // NOTE: This simple split(',') can break if names contain commas (e.g., Doe, John). 
-        // Ensure your sheet data does not contain commas in the Name column for reliability.
-        const rows = lines.slice(1).map(line => line.split(',').map(v => v.replace(/^"|"$/g, '')));
+try {
+  const res = await fetch(CHECK_IN_API_URL, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        if (rows.length === 0) {
-          throw new Error('No data rows found in the CSV.');
-        }
+  const raw = await res.text();
 
-       // 🧭 Filter & map players from the correct columns (Match your sheet)
-const today = new Date();
-const rowsData = rows
-  .filter(cols => {
-    // Column B (index 1) = Event, e.g. "Florida Players - The River Club, October 25"
-    const eventText = cols[1] || '';
-    const match = eventText.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i);
-    if (!match) return false;
-    const monthName = match[1];
-    const dayNum = parseInt(match[2], 10);
-    const eventDate = new Date(`${monthName} ${dayNum}, ${today.getFullYear()}`);
-    return eventDate >= today; // ✅ keep only upcoming events
+  // Parse CSV (handles commas inside quotes)
+  const lines = raw.trim().split('\n').filter(l => l.trim() !== '');
+  const rows = lines.slice(1).map(line => {
+    const cols = [];
+    let cur = '', inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; continue; }
+      if (ch === ',' && !inQuotes) { cols.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+    cols.push(cur);
+    return cols.map(v => v.trim());
   });
 
-allPlayers = rowsData.map((cols, i) => ({
-  id: `p${i}`,
-  name: cols[2] || 'Unknown',   // ✅ Column C = Player Name
-  handicap: 0,                  // No handicap in this sheet
-  event: cols[1] || '',         // Column B = Event
-  status: cols[3] || '',        // Column D = Player Status
-  guest: cols[4] || '',         // Column E = Guest Name(s)
-  group: 'unpaired'
-}));
+  if (rows.length === 0) throw new Error('No data rows found in the CSV.');
 
-statusElement.textContent = `❌ Failed to load live data (${err.message}). Using fallback mock data.`;
-        statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
-        allPlayers = mockPlayers;
-      }
+  // Keep only upcoming rounds based on Event text (col B = index 1)
+  const today = new Date(); today.setHours(0,0,0,0);
+  const rowsData = rows.filter(cols => {
+    const eventText = cols[1] || '';
+    const m = eventText.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i);
+    if (!m) return false;
+    const monthName = m[1];
+    const dayNum = parseInt(m[2], 10);
+    const eventDate = new Date(`${monthName} ${dayNum}, ${today.getFullYear()}`);
+    eventDate.setHours(0,0,0,0);
+    return eventDate >= today;
+  });
+
+  // Map to players (col C = name; others optional)
+  allPlayers = rowsData.map((cols, i) => ({
+    id: `p${i}`,
+    name: cols[2] || 'Unknown',  // Player Name (Column C)
+    handicap: 0,
+    event: cols[1] || '',        // Event (Column B)
+    status: cols[3] || '',       // Player Status (Column D)
+    guest: cols[4] || '',        // Guest Name(s) (Column E)
+    group: 'unpaired'
+  }));
+
+  statusElement.textContent = `✅ Successfully loaded ${allPlayers.length} players from live Google Sheet data.`;
+  statusElement.className = 'text-sm text-green-700 mt-2 font-medium';
+} catch (err) {
+  console.error('Error loading check-in data:', err);
+  statusElement.textContent = `❌ Failed to load live data (${err.message}). Using fallback mock data.`;
+  statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
+  allPlayers = mockPlayers;
+}
 
       renderPlayers();
       initDnd();

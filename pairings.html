@@ -265,11 +265,23 @@
         el.id = `group-container-${idx}`;
         el.className = 'bg-white p-4 rounded-xl shadow-lg space-y-2 border border-gray-200 h-full';
         el.innerHTML = `
-          <h4 class="text-md font-extrabold text-fpg-primary mb-3 border-b pb-2">
-            Tee Time ${time} <span class="text-sm font-normal text-gray-500">(Group ${idx+1})</span>
-          </h4>
-          <div class="player-drop-zone h-full min-h-[100px] space-y-2" data-time="${time}" data-group="${idx}"></div>
-        `;
+  <h4 class="text-md font-extrabold text-fpg-primary mb-3 border-b pb-2">
+    Tee Time ${time} <span class="text-sm font-normal text-gray-500">(Group ${idx+1})</span>
+  </h4>
+  <div class="player-drop-zone h-full min-h-[100px] space-y-2" data-time="${time}" data-group="${idx}"></div>
+  <hr class="my-3">
+  <div class="space-y-2">
+    <label class="block text-sm font-semibold text-gray-700">Scorekeeper 1:</label>
+    <select id="scorekeeper1-${idx}" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-fpg-primary focus:border-fpg-primary">
+      <option value="">Select player...</option>
+    </select>
+    <label class="block text-sm font-semibold text-gray-700">Scorekeeper 2:</label>
+    <select id="scorekeeper2-${idx}" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-fpg-primary focus:border-fpg-primary">
+      <option value="">Select player...</option>
+    </select>
+  </div>
+`;
+
         teeTimeWrapper.appendChild(el);
       });
     }
@@ -421,8 +433,28 @@ try {
   statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
   allPlayers = mockPlayers;
 }
+function updateScorekeeperDropdowns() {
+  currentTeeTimes.forEach((time, idx) => {
+    const playersInGroup = allPlayers.filter(p => p.group === String(idx));
+    const select1 = document.getElementById(`scorekeeper1-${idx}`);
+    const select2 = document.getElementById(`scorekeeper2-${idx}`);
+    if (!select1 || !select2) return;
+
+    // Clear previous options
+    [select1, select2].forEach(sel => {
+      sel.innerHTML = '<option value="">Select player...</option>';
+      playersInGroup.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+      });
+    });
+  });
+}
 
       renderPlayers();
+      updateScorekeeperDropdowns();
       initDnd();
     }
 
@@ -445,10 +477,12 @@ try {
         const players = allPlayers.filter(p=>p.group === String(idx));
         if(players.length>0){
           finalPairings.push({
-            tee_time: time,
-            group_number: idx+1,
-            players: players.map(p=>({ name:p.name, handicap:p.handicap, id:p.id }))
-          });
+  tee_time: time,
+  group_number: idx+1,
+  players: players.map(p => ({ name: p.name, handicap: p.handicap, id: p.id })),
+  scorekeeper1: document.getElementById(`scorekeeper1-${idx}`)?.selectedOptions[0]?.textContent || '',
+  scorekeeper2: document.getElementById(`scorekeeper2-${idx}`)?.selectedOptions[0]?.textContent || ''
+});
         }
       });
 

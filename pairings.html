@@ -1,581 +1,579 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FPG Pairing Manager - ADMIN</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FPG Pairing Manager - ADMIN</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    // Brand colors for Tailwind utility classes
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'fpg-primary': '#3c763d',
-            'fpg-accent':  '#e6b800',
-            'fpg-success': '#d4edda'
-          }
-        }
-      }
-    }
-  </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Brand colors for Tailwind utility classes
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fpg-primary': '#3c763d',
+                        'fpg-accent':  '#e6b800',
+                        'fpg-success': '#d4edda'
+                    }
+                }
+            }
+        }
+    </script>
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    :root{
-      --fpg-primary:#3c763d;
-      --fpg-accent:#e6b800;
-      --fpg-success:#d4edda;
-      --gray-100:#f3f4f6;
-      --gray-600:#4b5563;
-      --drop-hover:#e9f7ec; /* light green for drop hover */
-    }
-    body{ font-family: 'Inter', sans-serif; }
-    .player-card{ cursor: grab; touch-action: none; }
-    .modal{ transition: opacity .2s ease-in-out; }
-    .player-drop-zone.over{ background-color: var(--drop-hover); }
-    .calculated-time{
-      background-color: var(--gray-100);
-      color: var(--gray-600);
-      cursor: not-allowed;
-      font-weight: 500;
-    }
-  </style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        :root{
+            --fpg-primary:#3c763d;
+            --fpg-accent:#e6b800;
+            --fpg-success:#d4edda;
+            --gray-100:#f3f4f6;
+            --gray-600:#4b5563;
+            --drop-hover:#e9f7ec; /* light green for drop hover */
+        }
+        body{ font-family: 'Inter', sans-serif; }
+        .player-card{ cursor: grab; touch-action: none; }
+        .modal{ transition: opacity .2s ease-in-out; }
+        .player-drop-zone.over{ background-color: var(--drop-hover); }
+        .calculated-time{
+            background-color: var(--gray-100);
+            color: var(--gray-600);
+            cursor: not-allowed;
+            font-weight: 500;
+        }
+    </style>
 
-    <script src="https://unpkg.com/@dnd-kit/core@6.0.0/dist/dnd-kit-core.js"></script>
+    <script src="https://unpkg.com/@dnd-kit/core@6.0.0/dist/dnd-kit-core.js"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen p-4 sm:p-8">
-  <div class="max-w-6xl mx-auto space-y-8">
-    <header class="text-center">
-            <img
-        src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
-        alt="FPG League Logo"
-        class="mx-auto h-16 w-auto mb-4"
-        onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png';"
-      />
-      <h1 class="text-4xl font-extrabold text-fpg-primary mb-2">FPG Pairing Manager</h1>
-      <p class="text-gray-600">Drag and drop players to create foursomes, then publish to the public viewer.</p>
-    </header>
+    <div class="max-w-6xl mx-auto space-y-8">
+        <header class="text-center">
+            <img
+                src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
+                alt="FPG League Logo"
+                class="mx-auto h-16 w-auto mb-4"
+                onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png';"
+            />
+            <h1 class="text-4xl font-extrabold text-fpg-primary mb-2">FPG Pairing Manager</h1>
+            <p class="text-gray-600">Drag and drop players to create foursomes, then publish to the public viewer.</p>
+        </header>
 
-        <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-fpg-primary">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Configuration & Status</h2>
-      <div class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
-        <p class="text-sm font-medium text-gray-700">
-          BIN ID: <span id="binIdDisplay" class="font-mono text-fpg-primary">68f6557dae596e708f1f69d1</span>
-        </p>
-        <button onclick="clearMasterKey()" id="clearKeyButton" class="px-3 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full hover:bg-red-200 transition">
-          Clear Admin Key
-        </button>
-        
-      </div>
-      <p id="statusMessage" class="text-sm text-gray-700 mt-2">Loading check-in data...</p>
-    </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-fpg-primary">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Configuration & Status</h2>
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+                <p class="text-sm font-medium text-gray-700">
+                    BIN ID: <span id="binIdDisplay" class="font-mono text-fpg-primary">68f6557dae596e708f1f69d1</span>
+                </p>
+                <button onclick="clearMasterKey()" id="clearKeyButton" class="px-3 py-1 text-xs font-semibold text-red-600 bg-red-100 rounded-full hover:bg-red-200 transition">
+                    Clear Admin Key
+                </button>
 
-        <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-fpg-accent">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Weekly Tee Time Configuration</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <input type="text" id="time-0" placeholder="Start Time (e.g., 9:00 AM)" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-fpg-accent focus:border-fpg-accent" onchange="calculateTeeTimes()" />
-        <input type="text" id="time-1" placeholder="Time 2 (+8 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
-        <input type="text" id="time-2" placeholder="Time 3 (+16 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
-        <input type="text" id="time-3" placeholder="Time 4 (+24 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
-      </div>
-      <p id="timeStatus" class="text-sm text-gray-500 mt-3">Times loaded from your previous session.</p>
-    </div>
+            </div>
+            <p id="statusMessage" class="text-sm text-gray-700 mt-2">Loading check-in data...</p>
+        </div>
 
-        <div class="grid grid-cols-1 md:col-span-5 gap-6">
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                <div class="col-span-1 bg-white p-4 rounded-xl shadow-lg h-full max-h-[80vh] overflow-y-auto">
-          <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">Unpaired Players (<span id="unpairedCount">0</span>)        </h3>
-          <div id="unpairedContainer" class="space-y-2 player-drop-zone" data-group="unpaired" data-time="N/A"></div>
-        </div>
-                <div id="teeTimeContainer" class="col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-      </div>
-    </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-fpg-accent">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Weekly Tee Time Configuration</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <input type="text" id="time-0" placeholder="Start Time (e.g., 9:00 AM)" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-fpg-accent focus:border-fpg-accent" onchange="calculateTeeTimes()" />
+                <input type="text" id="time-1" placeholder="Time 2 (+8 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
+                <input type="text" id="time-2" placeholder="Time 3 (+16 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
+                <input type="text" id="time-3" placeholder="Time 4 (+24 min)" readonly class="w-full p-2 border border-gray-300 rounded-lg calculated-time" />
+            </div>
+            <p id="timeStatus" class="text-sm text-gray-500 mt-3">Times loaded from your previous session.</p>
+        </div>
 
-        <div class="text-center pt-4">
-      <button onclick="checkAndPublish()" id="publishButton"
-        class="px-10 py-4 bg-fpg-accent text-white font-semibold text-lg rounded-xl shadow-xl hover:bg-green-700 transition duration-150 ease-in-out disabled:opacity-50">
-        Publish Pairings to Public Viewer
-      </button>
-    </div>
-  </div>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div class="col-span-1 bg-white p-4 rounded-xl shadow-lg h-full max-h-[80vh] overflow-y-auto">
+                <h3 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">Unpaired Players (<span id="unpairedCount">0</span>)        </h3>
+                <div id="unpairedContainer" class="space-y-2 player-drop-zone" data-group="unpaired" data-time="N/A"></div>
+            </div>
+            <div id="teeTimeContainer" class="col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </div>
 
-    <div id="keyModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center opacity-0 pointer-events-none z-50">
-    <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm transform transition-all scale-95">
-      <h3 class="text-xl font-bold mb-4 text-red-600">Admin Authentication Required</h3>
-      <p class="text-sm text-gray-700 mb-4">
-        To securely update the pairings, please enter the <strong>jsonbin.io Master Key</strong>. This key is saved in your browser’s local storage for future use.
-      </p>
-      <input type="password" id="masterKeyInput" placeholder="Master Key (e.g., $2a$10$QW...)"
-        class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-fpg-primary focus:border-fpg-primary" />
-      <div class="flex justify-end space-x-3">
-        <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition">Cancel</button>
-        <button onclick="authenticateAndPublish()" id="authButton" class="px-4 py-2 bg-fpg-primary text-white font-medium rounded-lg hover:bg-fpg-accent transition">Authenticate & Publish</button>
-      </div>
-    </div>
-  </div>
+        <div class="text-center pt-4">
+            <button onclick="checkAndPublish()" id="publishButton"
+                class="px-10 py-4 bg-fpg-accent text-white font-semibold text-lg rounded-xl shadow-xl hover:bg-green-700 transition duration-150 ease-in-out disabled:opacity-50">
+                Publish Pairings to Public Viewer
+            </button>
+        </div>
+    </div>
 
- <script type="module">
-    // ================= CONFIG =================
-    const FINAL_PAIRINGS_BIN_ID = '68f6557dae596e708f1f69d1';
-    
-    // ❌ THIS IS THE LIKELY SOURCE OF YOUR 404 ERROR. 
-    // The published link for this Google Sheet has probably expired, been deleted, or the sheet 
-    // was unpublished. You must generate a new published CSV link for your sheet.
-    const CHECK_IN_API_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS6XoBTQryAiLHQzKVboT3zij3gekRO0ywjtEg6DGhgjkFzlkEdBe22RZ-f_1TZrs-qewzAWBipaG_B/pub?gid=907219414&single=true&output=csv";
+    <div id="keyModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center opacity-0 pointer-events-none z-50">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm transform transition-all scale-95">
+            <h3 class="text-xl font-bold mb-4 text-red-600">Admin Authentication Required</h3>
+            <p class="text-sm text-gray-700 mb-4">
+                To securely update the pairings, please enter the <strong>jsonbin.io Master Key</strong>. This key is saved in your browser’s local storage for future use.
+            </p>
+            <input type="password" id="masterKeyInput" placeholder="Master Key (e.g., $2a$10$QW...)"
+                class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-fpg-primary focus:border-fpg-primary" />
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition">Cancel</button>
+                <button onclick="authenticateAndPublish()" id="authButton" class="px-4 py-2 bg-fpg-primary text-white font-medium rounded-lg hover:bg-fpg-accent transition">Authenticate & Publish</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ================= CONFIG =================
+        const FINAL_PAIRINGS_BIN_ID = '68f6557dae596e708f1f69d1';
+
+        // ❌ THIS IS THE LIKELY SOURCE OF YOUR 404 ERROR.
+        // The published link for this Google Sheet has probably expired, been deleted, or the sheet
+        // was unpublished. You must generate a new published CSV link for your sheet.
+        const CHECK_IN_API_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS6XoBTQryAiLHQzKVboT3zij3gekRO0ywjtEg6DGhgjkFzlkEdBe22RZ-f_1TZrs-qewzAWBipaG_B/pub?gid=907219414&single=true&output=csv";
 
 
-    // ================ CONSTANTS ================
-    const DEFAULT_TEE_TIMES = ['9:00 AM', '9:08 AM', '9:16 AM', '9:24 AM'];
-    const MAX_PLAYERS_PER_GROUP = 4;
-    const TEE_TIME_INTERVAL = 8; // minutes
-    const LOCAL_STORAGE_KEY = 'fpg_master_key';
-    const LOCAL_STORAGE_TIMES_KEY = 'fpg_tee_times';
+        // ================ CONSTANTS ================
+        const DEFAULT_TEE_TIMES = ['9:00 AM', '9:08 AM', '9:16 AM', '9:24 AM'];
+        const MAX_PLAYERS_PER_GROUP = 4;
+        const TEE_TIME_INTERVAL = 8; // minutes
+        const LOCAL_STORAGE_KEY = 'fpg_master_key';
+        const LOCAL_STORAGE_TIMES_KEY = 'fpg_tee_times';
 
-    let currentTeeTimes = [...DEFAULT_TEE_TIMES];
-    let allPlayers = [];
+        let currentTeeTimes = [...DEFAULT_TEE_TIMES];
+        let allPlayers = [];
 
-    const statusElement = document.getElementById('statusMessage');
-    const unpairedContainer = document.getElementById('unpairedContainer');
-    const teeTimeWrapper = document.getElementById('teeTimeContainer');
-    const publishButton = document.getElementById('publishButton');
-    const keyModal = document.getElementById('keyModal');
-    const timeStatusElement = document.getElementById('timeStatus');
+        const statusElement = document.getElementById('statusMessage');
+        const unpairedContainer = document.getElementById('unpairedContainer');
+        const teeTimeWrapper = document.getElementById('teeTimeContainer');
+        const publishButton = document.getElementById('publishButton');
+        const keyModal = document.getElementById('keyModal');
+        const timeStatusElement = document.getElementById('timeStatus');
 
-    // ============== TIME HELPERS ==============
-    function parseTime(timeStr){
-      const today = new Date();
-      const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
-      if(!match) return null;
-      let [_, h, m, ap] = match;
-      h = parseInt(h,10); m = parseInt(m,10);
-      if(ap){
-        if(ap.toLowerCase()==='pm' && h<12) h+=12;
-        else if(ap.toLowerCase()==='am' && h===12) h=0;
-      }else if(h<7){ h+=12; }
-      today.setHours(h,m,0,0);
-      return today;
-    }
-    function formatTime(date){
-      if(!date) return '';
-      let h = date.getHours();
-      const m = date.getMinutes();
-      const ap = h>=12?'PM':'AM';
-      h = h%12; h = h? h:12;
-      const mm = m<10? '0'+m : m;
-      return `${h}:${mm} ${ap}`;
-    }
+        // ============== TIME HELPERS ==============
+        function parseTime(timeStr){
+            const today = new Date();
+            const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+            if(!match) return null;
+            let [_, h, m, ap] = match;
+            h = parseInt(h,10); m = parseInt(m,10);
+            if(ap){
+                if(ap.toLowerCase()==='pm' && h<12) h+=12;
+                else if(ap.toLowerCase()==='am' && h===12) h=0;
+            }else if(h<7){ h+=12; }
+            today.setHours(h,m,0,0);
+            return today;
+        }
+        function formatTime(date){
+            if(!date) return '';
+            let h = date.getHours();
+            const m = date.getMinutes();
+            const ap = h>=12?'PM':'AM';
+            h = h%12; h = h? h:12;
+            const mm = m<10? '0'+m : m;
+            return `${h}:${mm} ${ap}`;
+        }
 
-    // ============ TEE TIME MANAGEMENT ============
-    function calculateTeeTimes(){
-      const startTimeInput = document.getElementById('time-0');
-      const startTimeStr = startTimeInput.value.trim();
-      const startDate = parseTime(startTimeStr);
-      const newTimes = [];
+        // ============ TEE TIME MANAGEMENT ============
+        function calculateTeeTimes(){
+            const startTimeInput = document.getElementById('time-0');
+            const startTimeStr = startTimeInput.value.trim();
+            const startDate = parseTime(startTimeStr);
+            const newTimes = [];
 
-      if(!startDate || startTimeStr===''){
-        newTimes.push(startTimeStr || '');
-        for(let i=1;i<4;i++) newTimes.push('');
-        timeStatusElement.textContent = 'Please enter a valid start time (e.g., 9:00 AM).';
-        timeStatusElement.className = 'text-sm mt-3 font-medium text-red-500';
-      } else {
-        let t = new Date(startDate.getTime() - TEE_TIME_INTERVAL*60*1000);
-        for(let i=0;i<4;i++){
-          t.setMinutes(t.getMinutes()+TEE_TIME_INTERVAL);
-          newTimes.push(formatTime(t));
-        }
-        timeStatusElement.textContent = 'Tee times calculated and saved successfully to this browser!';
-        timeStatusElement.className = 'text-sm mt-3 font-medium text-green-700';
-      }
+            if(!startDate || startTimeStr===''){
+                newTimes.push(startTimeStr || '');
+                for(let i=1;i<4;i++) newTimes.push('');
+                timeStatusElement.textContent = 'Please enter a valid start time (e.g., 9:00 AM).';
+                timeStatusElement.className = 'text-sm mt-3 font-medium text-red-500';
+            } else {
+                let t = new Date(startDate.getTime() - TEE_TIME_INTERVAL*60*1000);
+                for(let i=0;i<4;i++){
+                    t.setMinutes(t.getMinutes()+TEE_TIME_INTERVAL);
+                    newTimes.push(formatTime(t));
+                }
+                timeStatusElement.textContent = 'Tee times calculated and saved successfully to this browser!';
+                timeStatusElement.className = 'text-sm mt-3 font-medium text-green-700';
+            }
 
-      newTimes.forEach((time, i)=>{
-        const el = document.getElementById(`time-${i}`);
-        if(el) el.value = time;
-      });
+            newTimes.forEach((time, i)=>{
+                const el = document.getElementById(`time-${i}`);
+                if(el) el.value = time;
+            });
 
-      localStorage.setItem(LOCAL_STORAGE_TIMES_KEY, JSON.stringify(newTimes));
-      currentTeeTimes = newTimes;
+            localStorage.setItem(LOCAL_STORAGE_TIMES_KEY, JSON.stringify(newTimes));
+            currentTeeTimes = newTimes;
 
-      setupContainers();
-      if(allPlayers.length>0) renderPlayers();
-    }
-    function loadTeeTimes(){
-      const saved = localStorage.getItem(LOCAL_STORAGE_TIMES_KEY);
-      let times = DEFAULT_TEE_TIMES;
-      if(saved){
-        try{ times = JSON.parse(saved); }catch{ localStorage.removeItem(LOCAL_STORAGE_TIMES_KEY); }
-      }
-      const startInput = document.getElementById('time-0');
-      if(startInput) startInput.value = times[0] || '';
-      calculateTeeTimes();
-      timeStatusElement.textContent = saved ? 'Times loaded from your previous session.' : 'Using default times. Edit the Start Time above to calculate others.';
-    }
+            setupContainers();
+            if(allPlayers.length>0) renderPlayers();
+        }
+        function loadTeeTimes(){
+            const saved = localStorage.getItem(LOCAL_STORAGE_TIMES_KEY);
+            let times = DEFAULT_TEE_TIMES;
+            if(saved){
+                try{ times = JSON.parse(saved); }catch{ localStorage.removeItem(LOCAL_STORAGE_TIMES_KEY); }
+            }
+            const startInput = document.getElementById('time-0');
+            if(startInput) startInput.value = times[0] || '';
+            calculateTeeTimes();
+            timeStatusElement.textContent = saved ? 'Times loaded from your previous session.' : 'Using default times. Edit the Start Time above to calculate others.';
+        }
 
-    // ============== KEY & MODAL ==============
-    function getMasterKey(){ return localStorage.getItem(LOCAL_STORAGE_KEY); }
-    function setMasterKey(k){ localStorage.setItem(LOCAL_STORAGE_KEY, k); }
-    function clearMasterKey(){
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      statusElement.textContent = 'Admin Key successfully cleared from this browser.';
-      statusElement.className = 'text-center font-medium text-green-700';
-    }
-    function openModal(){
-      keyModal.classList.remove('opacity-0','pointer-events-none');
-      keyModal.querySelector('div').classList.remove('scale-95');
-      document.getElementById('masterKeyInput').value = getMasterKey() || '';
-    }
-    function closeModal(){
-      keyModal.classList.add('opacity-0','pointer-events-none');
-      keyModal.querySelector('div').classList.add('scale-95');
-    }
-    async function authenticateAndPublish(){
-      const input = document.getElementById('masterKeyInput');
-      const key = input.value.trim();
-      if(!key || key.length<10){
-        input.classList.add('border-red-500');
-        statusElement.textContent = 'Error: Please enter a valid key.';
-        return;
-      }
-      input.classList.remove('border-red-500');
-      setMasterKey(key);
-      closeModal();
-      await publishPairings(key);
-    }
-    function checkAndPublish(){
-      const key = getMasterKey();
-      if(key){ publishPairings(key); } else { openModal(); }
-    }
-    
-    // 🛑 FUNCTION MOVED HERE FOR GLOBAL ACCESS AND CONSISTENCY
-    function updateScorekeeperDropdowns() {
-      currentTeeTimes.forEach((time, idx) => {
-        const groupZone = document.querySelector(`.player-drop-zone[data-group="${idx}"]`);
-        if (!groupZone) return;
+        // ============== KEY & MODAL ==============
+        function getMasterKey(){ return localStorage.getItem(LOCAL_STORAGE_KEY); }
+        function setMasterKey(k){ localStorage.setItem(LOCAL_STORAGE_KEY, k); }
+        function clearMasterKey(){
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            statusElement.textContent = 'Admin Key successfully cleared from this browser.';
+            statusElement.className = 'text-center font-medium text-green-700';
+        }
+        function openModal(){
+            keyModal.classList.remove('opacity-0','pointer-events-none');
+            keyModal.querySelector('div').classList.remove('scale-95');
+            document.getElementById('masterKeyInput').value = getMasterKey() || '';
+        }
+        function closeModal(){
+            keyModal.classList.add('opacity-0','pointer-events-none');
+            keyModal.querySelector('div').classList.add('scale-95');
+        }
+        async function authenticateAndPublish(){
+            const input = document.getElementById('masterKeyInput');
+            const key = input.value.trim();
+            if(!key || key.length<10){
+                input.classList.add('border-red-500');
+                statusElement.textContent = 'Error: Please enter a valid key.';
+                return;
+            }
+            input.classList.remove('border-red-500');
+            setMasterKey(key);
+            closeModal();
+            await publishPairings(key);
+        }
+        function checkAndPublish(){
+            const key = getMasterKey();
+            if(key){ publishPairings(key); } else { openModal(); }
+        }
 
-        // Collect player names currently in this group
-        // 🛠️ FIX: Only count children with the 'player-card' class
-        const playerCards = Array.from(groupZone.querySelectorAll('.player-card'));
-        const players = playerCards.map(card => card.textContent.trim());
+        // 🛑 FUNCTION MOVED HERE FOR GLOBAL ACCESS AND CONSISTENCY
+        function updateScorekeeperDropdowns() {
+            currentTeeTimes.forEach((time, idx) => {
+                const groupZone = document.querySelector(`.player-drop-zone[data-group="${idx}"]`);
+                if (!groupZone) return;
 
-        // Get the dropdowns for this group
-        const scorekeeper1 = document.getElementById(`scorekeeper1-${idx}`);
-        const scorekeeper2 = document.getElementById(`scorekeeper2-${idx}`);
+                // Collect player names currently in this group
+                // 🛠️ FIX: Only count children with the 'player-card' class
+                const playerCards = Array.from(groupZone.querySelectorAll('.player-card'));
+                const players = playerCards.map(card => card.textContent.trim());
 
-        // Reset and populate each dropdown
-        [scorekeeper1, scorekeeper2].forEach(select => {
-          if (!select) return;
-           // Preserve selected value if it's still a valid option
-          const selectedValue = select.value;
+                // Get the dropdowns for this group
+                const scorekeeper1 = document.getElementById(`scorekeeper1-${idx}`);
+                const scorekeeper2 = document.getElementById(`scorekeeper2-${idx}`);
 
-          select.innerHTML = '<option value="">Select Player</option>';
-          players.forEach(name => {
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.textContent = name;
-            select.appendChild(opt);
-          });
-          // Re-select the value if it still exists
-          if (players.includes(selectedValue)) {
-            select.value = selectedValue;
-          } else {
-            select.value = ""; // Default to "Select Player" if the keeper was dragged out
-          }
-        });
-      });
-    }
+                // Reset and populate each dropdown
+                [scorekeeper1, scorekeeper2].forEach(select => {
+                    if (!select) return;
+                    // Preserve selected value if it's still a valid option
+                    const selectedValue = select.value;
+
+                    select.innerHTML = '<option value="">Select Player</option>';
+                    players.forEach(name => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        select.appendChild(opt);
+                    });
+                    // Re-select the value if it still exists
+                    if (players.includes(selectedValue)) {
+                        select.value = selectedValue;
+                    } else {
+                        select.value = ""; // Default to "Select Player" if the keeper was dragged out
+                    }
+                });
+            });
+        }
 
 
-    // ============== UI BUILDERS ==============
+        // ============== UI BUILDERS ==============
 function setupContainers() {
-  teeTimeWrapper.innerHTML = '';
-  currentTeeTimes.forEach((time, idx) => {
-    const el = document.createElement('div');
-    el.id = `group-container-${idx}`;
-    // 🛠️ CSS FIX: Use h-full to ensure containers fill the height, 
-    // flex-col and justify-between for better vertical layout/spacing
-    el.className = 'bg-white p-4 rounded-xl shadow-lg border border-gray-200 flex flex-col h-full'; 
-    
-    // 1. Header
-    el.innerHTML = `
-      <h4 class="text-md font-extrabold text-fpg-primary mb-3 border-b pb-2 flex-shrink-0">
-        Tee Time ${time} <span class="text-sm font-normal text-gray-500">(Group ${idx + 1})</span>
-      </h4>
-    `;
+    teeTimeWrapper.innerHTML = '';
+    currentTeeTimes.forEach((time, idx) => {
+        const el = document.createElement('div');
+        el.id = `group-container-${idx}`;
+        // 🛠️ CSS FIX: Use h-full to ensure containers fill the height, 
+        // flex-col and justify-between for better vertical layout/spacing
+        el.className = 'bg-white p-4 rounded-xl shadow-lg border border-gray-200 flex flex-col h-full'; 
+        
+        // 1. Header
+        el.innerHTML = `
+            <h4 class="text-md font-extrabold text-fpg-primary mb-3 border-b pb-2 flex-shrink-0">
+                Tee Time ${time} <span class="text-sm font-normal text-gray-500">(Group ${idx + 1})</span>
+            </h4>
+        `;
 
-    // 2. Player Drop Zone (takes remaining vertical space)
-    const dropZone = document.createElement('div');
-    // 🛠️ CSS FIX: Use flex-grow for vertical expansion and space-y-2 for vertical player card spacing
-    dropZone.className = 'player-drop-zone flex-grow space-y-2 mb-3 min-h-[100px] overflow-y-auto'; 
-    dropZone.setAttribute('data-time', time);
-    dropZone.setAttribute('data-group', idx);
-    el.appendChild(dropZone);
+        // 2. Player Drop Zone (takes remaining vertical space)
+        const dropZone = document.createElement('div');
+        // 🛠️ CSS FIX: Use flex-grow for vertical expansion and space-y-2 for vertical player card spacing
+        dropZone.className = 'player-drop-zone flex-grow space-y-2 mb-3 min-h-[100px] overflow-y-auto'; 
+        dropZone.setAttribute('data-time', time);
+        dropZone.setAttribute('data-group', idx);
+        el.appendChild(dropZone);
 
 
-    // 3. Scorekeeper Dropdowns (fixed at the bottom)
-    const dropdowns = document.createElement('div');
-    // 🛠️ CSS FIX: Adjusted padding and spacing for a tighter look
-    dropdowns.className = 'bg-gray-50 p-2 rounded-lg border border-gray-200 space-y-1 flex-shrink-0'; 
-    dropdowns.innerHTML = `
-      <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
-        Scorekeeper 1
-      </label>
-      <select id="scorekeeper1-${idx}" 
-                class="w-full border border-gray-300 rounded-lg p-1 text-sm">
-        <option value="">Select Player</option>
-      </select>
+        // 3. Scorekeeper Dropdowns (fixed at the bottom)
+        const dropdowns = document.createElement('div');
+        // 🛠️ CSS FIX: Adjusted padding and spacing for a tighter look
+        dropdowns.className = 'bg-gray-50 p-2 rounded-lg border border-gray-200 space-y-1 flex-shrink-0'; 
+        dropdowns.innerHTML = `
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Scorekeeper 1
+            </label>
+            <select id="scorekeeper1-${idx}" 
+                            class="w-full border border-gray-300 rounded-lg p-1 text-sm">
+                <option value="">Select Player</option>
+            </select>
 
-      <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mt-2">
-        Scorekeeper 2
-      </label>
-      <select id="scorekeeper2-${idx}" 
-                class="w-full border border-gray-300 rounded-lg p-1 text-sm">
-        <option value="">Select Player</option>
-      </select>
-    `;
-    el.appendChild(dropdowns);
-    
-    teeTimeWrapper.appendChild(el);
-  });
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mt-2">
+                Scorekeeper 2
+            </label>
+            <select id="scorekeeper2-${idx}" 
+                            class="w-full border border-gray-300 rounded-lg p-1 text-sm">
+                <option value="">Select Player</option>
+            </select>
+        `;
+        el.appendChild(dropdowns);
+        
+        teeTimeWrapper.appendChild(el);
+    });
 }
 
-    function renderPlayers(){
-      unpairedContainer.innerHTML = '';
-      document.querySelectorAll('.player-drop-zone').forEach(z=>{
-        if(z.getAttribute('data-group')!=='unpaired') z.innerHTML='';
-      });
-      document.getElementById('unpairedCount').textContent =
-        allPlayers.filter(p=>p.group==='unpaired').length;
+        function renderPlayers(){
+            unpairedContainer.innerHTML = '';
+            document.querySelectorAll('.player-drop-zone').forEach(z=>{
+                if(z.getAttribute('data-group')!=='unpaired') z.innerHTML='';
+            });
+            document.getElementById('unpairedCount').textContent =
+                allPlayers.filter(p=>p.group==='unpaired').length;
 
-      allPlayers.forEach(p=>{
-        const card = document.createElement('div');
-        card.id = `player-${p.id}`;
-        card.draggable = true;
-        card.className = 'player-card p-3 bg-fpg-primary/10 border border-fpg-primary/50 rounded-lg text-sm font-semibold hover:bg-fpg-primary/20 transition duration-100 shadow-sm';
-        card.textContent = p.name;
-        card.setAttribute('data-id', p.id);
+            allPlayers.forEach(p=>{
+                const card = document.createElement('div');
+                card.id = `player-${p.id}`;
+                card.draggable = true;
+                card.className = 'player-card p-3 bg-fpg-primary/10 border border-fpg-primary/50 rounded-lg text-sm font-semibold hover:bg-fpg-primary/20 transition duration-100 shadow-sm';
+                card.textContent = p.name;
+                card.setAttribute('data-id', p.id);
 
-        const target = p.group==='unpaired'
-          ? unpairedContainer
-          : document.querySelector(`.player-drop-zone[data-group="${p.group}"]`);
+                const target = p.group==='unpaired'
+                    ? unpairedContainer
+                    : document.querySelector(`.player-drop-zone[data-group="${p.group}"]`);
 
-        (target || unpairedContainer).appendChild(card);
-    if (!target) p.group = 'unpaired';
-  });
+                (target || unpairedContainer).appendChild(card);
+            if (!target) p.group = 'unpaired';
+            });
 
-  // ✅ Run once at the end — now dropdowns update properly
-  updateScorekeeperDropdowns();
-}
+        // ✅ Run once at the end — now dropdowns update properly
+        updateScorekeeperDropdowns();
+        }
 
-    // ============== DND (native) ==============
-    function initDnd(){
-      const dragstart = (e)=>{
-        if(!e.target.classList.contains('player-card')) return;
-        e.dataTransfer.setData('text/plain', e.target.getAttribute('data-id'));
-        e.target.classList.add('opacity-50','border-dashed','border-4','border-red-400');
-      };
-      const dragover = (e)=>{
-        e.preventDefault();
-        const zone = e.target.closest('.player-drop-zone'); 
-        // 🛠️ Fix 1: Ensure only the currently dragged over zone is highlighted
-        document.querySelectorAll('.player-drop-zone.over').forEach(z=>z.classList.remove('over'));
-        if(zone) zone.classList.add('over');
-      };
-      const dragenter = (e)=>{
-        // 🛠️ Removed original logic. Relying on dragover for 'over' class.
-      };
-      const dragleave = (e)=>{
-        // 🛠️ Removed original logic. Relying on dragover for 'over' class.
-      };
-      const drop = (e)=>{
-        e.preventDefault();
-        const zone = e.target.closest('.player-drop-zone'); 
-        if(!zone) return;
-        zone.classList.remove('over');
+        // ============== DND (native) ==============
+        function initDnd(){
+            const dragstart = (e)=>{
+                if(!e.target.classList.contains('player-card')) return;
+                e.dataTransfer.setData('text/plain', e.target.getAttribute('data-id'));
+                e.target.classList.add('opacity-50','border-dashed','border-4','border-red-400');
+            };
+            const dragover = (e)=>{
+                e.preventDefault();
+                const zone = e.target.closest('.player-drop-zone'); 
+                // 🛠️ Fix 1: Ensure only the currently dragged over zone is highlighted
+                document.querySelectorAll('.player-drop-zone.over').forEach(z=>z.classList.remove('over'));
+                if(zone) zone.classList.add('over');
+            };
+            const dragenter = (e)=>{
+                // 🛠️ Removed original logic. Relying on dragover for 'over' class.
+            };
+            const dragleave = (e)=>{
+                // 🛠️ Removed original logic. Relying on dragover for 'over' class.
+            };
+            const drop = (e)=>{
+                e.preventDefault();
+                const zone = e.target.closest('.player-drop-zone'); 
+                if(!zone) return;
+                zone.classList.remove('over');
 
-        const playerId = e.dataTransfer.getData('text/plain');
-        const card = document.getElementById(`player-${playerId}`);
-        const targetGroupId = zone.getAttribute('data-group');
+                const playerId = e.dataTransfer.getData('text/plain');
+                const card = document.getElementById(`player-${playerId}`);
+                const targetGroupId = zone.getAttribute('data-group');
 
-        // 🛠️ BUG FIX: The previous count calculation was incorrect.
-        // It was counting *all* children, not just existing player cards.
-        const currentCount = zone.querySelectorAll('.player-card').length; 
+                // 🛠️ BUG FIX: The previous count calculation was incorrect.
+                // It was counting *all* children, not just existing player cards.
+                const currentCount = zone.querySelectorAll('.player-card').length; 
 
-        if(targetGroupId!=='unpaired' && currentCount >= MAX_PLAYERS_PER_GROUP){
-          statusElement.textContent = `Group ${parseInt(targetGroupId,10)+1} is full (max ${MAX_PLAYERS_PER_GROUP} players).`;
-          statusElement.classList.add('text-red-600','font-bold');
-          return;
-        }
+                if(targetGroupId!=='unpaired' && currentCount >= MAX_PLAYERS_PER_GROUP){
+                    statusElement.textContent = `Group ${parseInt(targetGroupId,10)+1} is full (max ${MAX_PLAYERS_PER_GROUP} players).`;
+                    statusElement.classList.add('text-red-600','font-bold');
+                    return;
+                }
 
-        const idx = allPlayers.findIndex(p=>p.id===playerId);
-        if(idx>-1) allPlayers[idx].group = targetGroupId;
+                const idx = allPlayers.findIndex(p=>p.id===playerId);
+                if(idx>-1) allPlayers[idx].group = targetGroupId;
 
-        zone.appendChild(card);
-        statusElement.textContent = 'Pairing updated.';
-        statusElement.classList.remove('text-red-600','font-bold');
-        document.getElementById('unpairedCount').textContent =
-          allPlayers.filter(p=>p.group==='unpaired').length;
-        
-        // 🛠️ Scorekeepers must update on drop
-        updateScorekeeperDropdowns();
+                zone.appendChild(card);
+                statusElement.textContent = 'Pairing updated.';
+                statusElement.classList.remove('text-red-600','font-bold');
+                document.getElementById('unpairedCount').textContent =
+                    allPlayers.filter(p=>p.group==='unpaired').length;
+                
+                // 🛠️ Scorekeepers must update on drop
+                updateScorekeeperDropdowns();
 
-      };
-      const dragend = (e)=>{
-        if(e.target && e.target.classList) e.target.classList.remove('opacity-50','border-dashed','border-4','border-red-400');
-        document.querySelectorAll('.player-drop-zone').forEach(z=>z.classList.remove('over'));
-      };
+            };
+            const dragend = (e)=>{
+                if(e.target && e.target.classList) e.target.classList.remove('opacity-50','border-dashed','border-4','border-red-400');
+                document.querySelectorAll('.player-drop-zone').forEach(z=>z.classList.remove('over'));
+            };
 
-      document.addEventListener('dragstart', dragstart);
-      document.addEventListener('dragover', dragover);
-      document.addEventListener('drop', drop);
-      document.addEventListener('dragend', dragend);
-    }
+            document.addEventListener('dragstart', dragstart);
+            document.addEventListener('dragover', dragover);
+            document.addEventListener('drop', drop);
+            document.addEventListener('dragend', dragend);
+        }
 
-    // ============== DATA LOAD ==============
-    async function loadCheckinData(){
-      document.getElementById('binIdDisplay').textContent = FINAL_PAIRINGS_BIN_ID;
-      loadTeeTimes();
+        // ============== DATA LOAD ==============
+        async function loadCheckinData(){
+            document.getElementById('binIdDisplay').textContent = FINAL_PAIRINGS_BIN_ID;
+            loadTeeTimes();
 
-      // Fallback mock data (used only if live fetch fails)
-      const mockNames = ['Joe','Sarah','Mike','Karen','David','Lisa','Tom','Amy','Sam','Ella','Ben','Chloe','Ryan','Zoe','Mark'];
-      const mockPlayers = mockNames.map((name,i)=>({
-        id:`p${i}`, name, group:'unpaired', handicap: Math.floor(Math.random()*25)+5
-      }));
+            // Fallback mock data (used only if live fetch fails)
+            const mockNames = ['Joe','Sarah','Mike','Karen','David','Lisa','Tom','Amy','Sam','Ella','Ben','Chloe','Ryan','Zoe','Mark'];
+            const mockPlayers = mockNames.map((name,i)=>({
+                id:`p${i}`, name, group:'unpaired', handicap: Math.floor(Math.random()*25)+5
+            }));
 
-      statusElement.textContent = 'Attempting to fetch live player check-in data from Google Sheet...';
-      statusElement.className = 'text-sm text-gray-600 mt-2';
+            statusElement.textContent = 'Attempting to fetch live player check-in data from Google Sheet...';
+            statusElement.className = 'text-sm text-gray-600 mt-2';
 
-try {
-  const res = await fetch(CHECK_IN_API_URL, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        try {
+            const res = await fetch(CHECK_IN_API_URL, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-  const raw = await res.text();
+            const raw = await res.text();
 
-  // Parse CSV (handles commas inside quotes)
-  const lines = raw.trim().split('\n').filter(l => l.trim() !== '');
-  const rows = lines.slice(1).map(line => {
-    const cols = [];
-    let cur = '', inQuotes = false;
-    for (const ch of line) {
-      if (ch === '"') { inQuotes = !inQuotes; continue; }
-      if (ch === ',' && !inQuotes) { cols.push(cur); cur = ''; }
-      else { cur += ch; }
-    }
-    cols.push(cur);
-    return cols.map(v => v.trim());
-  });
+            // Parse CSV (handles commas inside quotes)
+            const lines = raw.trim().split('\n').filter(l => l.trim() !== '');
+            const rows = lines.slice(1).map(line => {
+                const cols = [];
+                let cur = '', inQuotes = false;
+                for (const ch of line) {
+                    if (ch === '"') { inQuotes = !inQuotes; continue; }
+                    if (ch === ',' && !inQuotes) { cols.push(cur); cur = ''; }
+                    else { cur += ch; }
+                }
+                cols.push(cur);
+                return cols.map(v => v.trim());
+            });
 
-  if (rows.length === 0) throw new Error('No data rows found in the CSV.');
+            if (rows.length === 0) throw new Error('No data rows found in the CSV.');
 
-  // Keep only upcoming rounds based on Event text (col B = index 1)
-  const today = new Date(); today.setHours(0,0,0,0);
-  const rowsData = rows.filter(cols => {
-    const eventText = cols[1] || '';
-    const m = eventText.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i);
-    if (!m) return false;
-    const monthName = m[1];
-    const dayNum = parseInt(m[2], 10);
-    const eventDate = new Date(`${monthName} ${dayNum}, ${today.getFullYear()}`);
-    eventDate.setHours(0,0,0,0);
-    return eventDate >= today;
-  });
+            // Keep only upcoming rounds based on Event text (col B = index 1)
+            const today = new Date(); today.setHours(0,0,0,0);
+            const rowsData = rows.filter(cols => {
+                const eventText = cols[1] || '';
+                const m = eventText.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i);
+                if (!m) return false;
+                const monthName = m[1];
+                const dayNum = parseInt(m[2], 10);
+                const eventDate = new Date(`${monthName} ${dayNum}, ${today.getFullYear()}`);
+                eventDate.setHours(0,0,0,0);
+                return eventDate >= today;
+            });
 
-  // Map to players (col C = name; others optional)
-  allPlayers = rowsData.map((cols, i) => ({
-    id: `p${i}`,
-    name: cols[2] || 'Unknown',  // Player Name (Column C)
-    handicap: 0,
-    event: cols[1] || '',        // Event (Column B)
-    status: cols[3] || '',       // Player Status (Column D)
-    guest: cols[4] || '',        // Guest Name(s) (Column E)
-    group: 'unpaired'
-  }));
+            // Map to players (col C = name; others optional)
+            allPlayers = rowsData.map((cols, i) => ({
+                id: `p${i}`,
+                name: cols[2] || 'Unknown',  // Player Name (Column C)
+                handicap: 0,
+                event: cols[1] || '',        // Event (Column B)
+                status: cols[3] || '',       // Player Status (Column D)
+                guest: cols[4] || '',        // Guest Name(s) (Column E)
+                group: 'unpaired'
+            }));
 
-  statusElement.textContent = `✅ Successfully loaded ${allPlayers.length} players from live Google Sheet data.`;
-  statusElement.className = 'text-sm text-green-700 mt-2 font-medium';
-} catch (err) {
-  console.error('Error loading check-in data:', err);
-  statusElement.textContent = `❌ Failed to load live data (${err.message}). Using fallback mock data.`;
-  statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
-  allPlayers = mockPlayers;
-}
+            statusElement.textContent = `✅ Successfully loaded ${allPlayers.length} players from live Google Sheet data.`;
+            statusElement.className = 'text-sm text-green-700 mt-2 font-medium';
+        } catch (err) {
+            console.error('Error loading check-in data:', err);
+            statusElement.textContent = `❌ Failed to load live data (${err.message}). Using fallback mock data.`;
+            statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
+            allPlayers = mockPlayers;
+        }
 
-      renderPlayers();
-      initDnd();
-    }
+            renderPlayers();
+            initDnd();
+        }
 
-    // ============== PUBLISH ==============
-    async function publishPairings(masterKey){
-      // Allow your actual ID. Only block if empty/placeholder.
-      if(!FINAL_PAIRINGS_BIN_ID || FINAL_PAIRINGS_BIN_ID === 'YOUR_BIN_ID_HERE'){
-        statusElement.textContent = 'Error: Please set your FINAL_PAIRINGS_BIN_ID.';
-        statusElement.className = 'text-center font-medium text-red-600';
-        return;
-      }
-      if(currentTeeTimes.some(t=>!t || t.trim()==='')){
-        statusElement.textContent = 'Warning: Tee times are not fully set. Please enter a valid start time.';
-        statusElement.className = 'text-center font-medium text-orange-500';
-        return;
-      }
+        // ============== PUBLISH ==============
+        async function publishPairings(masterKey){
+            // Allow your actual ID. Only block if empty/placeholder.
+            if(!FINAL_PAIRINGS_BIN_ID || FINAL_PAIRINGS_BIN_ID === 'YOUR_BIN_ID_HERE'){
+                statusElement.textContent = 'Error: Please set your FINAL_PAIRINGS_BIN_ID.';
+                statusElement.className = 'text-center font-medium text-red-600';
+                return;
+            }
+            if(currentTeeTimes.some(t=>!t || t.trim()==='')){
+                statusElement.textContent = 'Warning: Tee times are not fully set. Please enter a valid start time.';
+                statusElement.className = 'text-center font-medium text-orange-500';
+                return;
+            }
 
-      const finalPairings = [];
-      currentTeeTimes.forEach((time, idx)=>{
-        const players = allPlayers.filter(p=>p.group === String(idx));
-        if(players.length>0){
-          finalPairings.push({
-  tee_time: time,
-  group_number: idx+1,
-  players: players.map(p => ({ name: p.name, handicap: p.handicap, id: p.id })),
-  scorekeeper1: document.getElementById(`scorekeeper1-${idx}`)?.selectedOptions[0]?.textContent || '',
-  scorekeeper2: document.getElementById(`scorekeeper2-${idx}`)?.selectedOptions[0]?.textContent || ''
-});
-        }
-      });
+            const finalPairings = [];
+            currentTeeTimes.forEach((time, idx)=>{
+                const players = allPlayers.filter(p=>p.group === String(idx));
+                if(players.length>0){
+                    finalPairings.push({
+            tee_time: time,
+            group_number: idx+1,
+            players: players.map(p => ({ name: p.name, handicap: p.handicap, id: p.id })),
+            scorekeeper1: document.getElementById(`scorekeeper1-${idx}`)?.selectedOptions[0]?.textContent || '',
+            scorekeeper2: document.getElementById(`scorekeeper2-${idx}`)?.selectedOptions[0]?.textContent || ''
+        });
+                }
+            });
 
-      const PUBLISH_URL = `https://api.jsonbin.io/v3/b/${FINAL_PAIRINGS_BIN_ID}`;
+            const PUBLISH_URL = `https://api.jsonbin.io/v3/b/${FINAL_PAIRINGS_BIN_ID}`;
 
-      statusElement.textContent = 'Publishing... Please wait.';
-      statusElement.className = 'text-center font-medium text-gray-600';
-      publishButton.disabled = true;
+            statusElement.textContent = 'Publishing... Please wait.';
+            statusElement.className = 'text-center font-medium text-gray-600';
+            publishButton.disabled = true;
 
-      try{
-        const resp = await fetch(PUBLISH_URL, {
-          method:'PUT',
-          headers:{
-            'Content-Type':'application/json',
-            'X-Master-Key': masterKey
-          },
-          body: JSON.stringify(finalPairings)
-        });
-        if(!resp.ok){
-          try{
-            const det = await resp.json();
-            console.warn('Server response:', det);
-          }catch{}
-          if(resp.status===401){ clearMasterKey(); }
-          throw new Error(`Server rejected the request (Status: ${resp.status}). Key may be invalid or expired. Re-authenticate.`);
-        }
-        statusElement.textContent = '✅ Successfully Published! Pairings are live.';
-        statusElement.className = 'text-center font-medium text-green-700';
-      }catch(err){
-        console.error('Publish failed:', err);
-        statusElement.textContent = `❌ Publish failed! Error: ${err.message}`;
-        statusElement.className = 'text-center font-medium text-red-600';
-      }finally{
-        publishButton.disabled = false;
-      }
-    }
+            try{
+                const resp = await fetch(PUBLISH_URL, {
+                    method:'PUT',
+                    headers:{
+                        'Content-Type':'application/json',
+                        'X-Master-Key': masterKey
+                    },
+                    body: JSON.stringify(finalPairings)
+                });
+                if(!resp.ok){
+                    try{
+                        const det = await resp.json();
+                        console.warn('Server response:', det);
+                    }catch{}
+                    if(resp.status===401){ clearMasterKey(); }
+                    throw new Error(`Server rejected the request (Status: ${resp.status}). Key may be invalid or expired. Re-authenticate.`);
+                }
+                statusElement.textContent = '✅ Successfully Published! Pairings are live.';
+                statusElement.className = 'text-center font-medium text-green-700';
+            }catch(err){
+                console.error('Publish failed:', err);
+                statusElement.textContent = `❌ Publish failed! Error: ${err.message}`;
+                statusElement.className = 'text-center font-medium text-red-600';
+            }finally{
+                publishButton.disabled = false;
+            }
+        }
 
-    // Expose for HTML handlers
-    window.publishPairings = publishPairings;
-    window.checkAndPublish = checkAndPublish;
-    window.authenticateAndPublish = authenticateAndPublish;
-    window.closeModal = closeModal;
-    window.clearMasterKey = clearMasterKey;
-    window.calculateTeeTimes = calculateTeeTimes;
+        // Expose for HTML handlers
+        window.publishPairings = publishPairings;
+        window.checkAndPublish = checkAndPublish;
+        window.authenticateAndPublish = authenticateAndPublish;
+        window.closeModal = closeModal;
+        window.clearMasterKey = clearMasterKey;
+        window.calculateTeeTimes = calculateTeeTimes;
 
-    document.addEventListener('DOMContentLoaded', loadCheckinData);
-  </script>
+        document.addEventListener('DOMContentLoaded', loadCheckinData);
+    </script>
 </body>
 </html>

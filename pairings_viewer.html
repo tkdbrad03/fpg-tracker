@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FPG Pairings Viewer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'fpg-primary': '#3c763d',
+            'fpg-accent': '#e6b800',
+            'fpg-bg': '#f8f9fa'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-fpg-bg text-gray-800 min-h-screen flex flex-col items-center p-6">
+
+  <header class="text-center mb-8">
+    <img src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png" alt="FPG Logo" class="h-20 mx-auto mb-3" />
+    <h1 class="text-3xl font-extrabold text-fpg-primary">Florida Players Group</h1>
+    <p class="text-gray-600 font-medium">Official Pairings & Tee Times</p>
+  </header>
+
+  <div id="pairingsContainer" class="w-full max-w-4xl space-y-6"></div>
+
+  <footer class="mt-12 text-sm text-gray-500">
+    <p>Auto-refreshes every 30 seconds • Powered by FPG Pairing Manager</p>
+  </footer>
+
+  <script>
+    const BIN_ID = '68f6557dae596e708f1f69d1';
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+    const container = document.getElementById('pairingsContainer');
+
+    async function loadPairings() {
+      container.innerHTML = `
+        <div class="text-center text-gray-500 font-medium">
+          Loading live pairings...
+        </div>
+      `;
+
+      try {
+        const res = await fetch(API_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to load pairings.');
+        const data = await res.json();
+        const pairings = data.record;
+
+        if (!Array.isArray(pairings) || pairings.length === 0) {
+          container.innerHTML = `
+            <div class="text-center text-gray-500 font-medium">
+              No published pairings available yet.
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = pairings.map(group => `
+          <div class="bg-white shadow-lg rounded-xl border-t-4 border-fpg-primary p-5">
+            <h2 class="text-xl font-bold text-fpg-primary mb-2">
+              Tee Time ${group.tee_time}
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">
+              Group ${group.group_number}
+            </p>
+            <ul class="space-y-2">
+              ${group.players.map(p => `
+                <li class="bg-fpg-primary/10 border border-fpg-primary/30 rounded-lg p-3 font-semibold">
+                  ${p.name}
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `
+          <div class="text-center text-red-600 font-medium">
+            ❌ Error loading pairings: ${err.message}
+          </div>`;
+      }
+    }
+
+    loadPairings();
+    setInterval(loadPairings, 30000); // auto-refresh every 30s
+  </script>
+</body>
+</html>

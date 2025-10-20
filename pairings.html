@@ -317,9 +317,12 @@ function setupContainers() {
           : document.querySelector(`.player-drop-zone[data-group="${p.group}"]`);
 
         (target || unpairedContainer).appendChild(card);
-        if(!target) p.group='unpaired';
-      });
-    }
+    if (!target) p.group = 'unpaired';
+  });
+
+  // ✅ Run once at the end — now dropdowns update properly
+  updateScorekeeperDropdowns();
+}
 
     // ============== DND (native) ==============
     function initDnd(){

@@ -796,10 +796,10 @@
         // ==================== DATA LOADING (DYNAMIC) ====================
         async function loadData() {
             try {
-                const url = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}/latest`;
+                const url = `https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest`;
                 const headers = { 'X-Bin-Meta': 'false' };
                 // If your bin is private, uncomment and replace the key below:
-                // if (JSON_BIN_MASTER_KEY !== 'REPLACE_WITH_YOUR_MASTER_KEY_IF_PRIVATE') headers['X-Master-Key'] = JSON_BIN_MASTER_KEY;
+                // if (JSON_BIN_MASTER_KEY !== '$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O') headers['X-Master-Key'] = JSON_BIN_MASTER_KEY;
 
                 const response = await fetch(url, { method: 'GET', headers: headers });
 
@@ -1528,70 +1528,35 @@
             }
         }, 3000);
     </script>
-    <script>
-const courseSelect = document.getElementById('courseSelect');
+   <script>
+const courseSelect = document.getElementById("courseSelect");
+const binUrl = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest"; // replace with your actual bin id
+const masterKey = "$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O"; // add your key here if private, else leave blank
 
-// 1️⃣  Load courses from your JSON Bin
-fetch('https://api.jsonbin.io/v3/b/66f4aa2f8b1234567890abcdef/latest', {
-  headers: {
-    'X-Master-Key': '$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O'
-  }
-})
-.then(res => res.json())
-.then(data => {
-  const courses = data.record;
-  courseSelect.innerHTML = '<option value="">Select a course</option>';
-  courses.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.course_name;
-    opt.textContent = c.course_name;
-    courseSelect.appendChild(opt);
-  });
-})
-.catch(err => {
-  console.error('Error loading courses:', err);
-  courseSelect.innerHTML = '<option>Error loading courses</option>';
-});
+fetch(binUrl, masterKey ? { headers: { "X-Master-Key": masterKey } } : {})
+  .then(res => {
+    if (!res.ok) throw new Error("Network response not ok");
+    return res.json();
+  })
+  .then(data => {
+    // JSONBin v3 returns: { record: [...] }
+    const courses = data.record;
+    if (!Array.isArray(courses)) throw new Error("Invalid data format");
 
-
-// 2️⃣  When player clicks “Start Round”
-function startRound() {
-  const selectedCourseName = courseSelect.value;
-  if (!selectedCourseName) {
-    alert('Please select a course first.');
-    return;
-  }
-
-  // Fetch courses again (or cache them)
-  fetch('https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest')
-    .then(res => res.json())
-    .then(data => {
-      const selectedCourse = data.record.find(
-        c => c.course_name === selectedCourseName
-      );
-
-      // Store course holes globally (so play view can render)
-      window.currentCourseHoles = selectedCourse.course_holes;
-
-      // ✅ Switch to play view
-      document.getElementById('setup-view').classList.remove('active');
-      document.getElementById('play-view').classList.add('active');
-
-      // ✅ Display course info at the top
-      renderCourseHeader(selectedCourse);
+    courseSelect.innerHTML = '<option value="">Select a course</option>';
+    courses.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.course_name;
+      opt.textContent = c.course_name;
+      courseSelect.appendChild(opt);
     });
-}
-
-// 3️⃣  Display course name + par/hcp header
-function renderCourseHeader(course) {
-  const header = document.getElementById('course-header');
-  if (!header) return;
-  header.innerHTML = `
-    <h2>${course.course_name}</h2>
-    <p>18 Holes • PAR ${course.course_holes.reduce((a,b)=>a+b.par,0)}</p>
-  `;
-}
+  })
+  .catch(err => {
+    console.error("Error loading courses:", err);
+    courseSelect.innerHTML = '<option>Error loading courses</option>';
+  });
 </script>
+
 
 </body>
 </html>

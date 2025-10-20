@@ -382,31 +382,31 @@
           throw new Error('No data rows found in the CSV.');
         }
 
-        // Filter to only upcoming rounds (today or later)
+       // 🧭 Filter & map players from the correct columns (Match your sheet)
 const today = new Date();
-allPlayers = rows
-  .map((cols, i) => {
-    const dateStr = cols[3] || ''; // Assuming column 4 is "Round Date"
-    const roundDate = dateStr ? new Date(dateStr) : null;
+const rowsData = rows
+  .filter(cols => {
+    // Column B (index 1) = Event, e.g. "Florida Players - The River Club, October 25"
+    const eventText = cols[1] || '';
+    const match = eventText.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i);
+    if (!match) return false;
+    const monthName = match[1];
+    const dayNum = parseInt(match[2], 10);
+    const eventDate = new Date(`${monthName} ${dayNum}, ${today.getFullYear()}`);
+    return eventDate >= today; // ✅ keep only upcoming events
+  });
 
-    return {
-      id: cols[2] || `p${i}`,         // Column 3 (Index 2) = ID
-      name: cols[0] || 'Unknown',     // Column 1 (Index 0) = Name
-      handicap: parseFloat(cols[1]) || 0, // Column 2 (Index 1) = Handicap
-      roundDate,
-      group: 'unpaired'
-    };
-  })
-  .filter(p => !p.roundDate || p.roundDate >= today); // Keep only today or future
+allPlayers = rowsData.map((cols, i) => ({
+  id: `p${i}`,
+  name: cols[2] || 'Unknown',   // ✅ Column C = Player Name
+  handicap: 0,                  // No handicap in this sheet
+  event: cols[1] || '',         // Column B = Event
+  status: cols[3] || '',        // Column D = Player Status
+  guest: cols[4] || '',         // Column E = Guest Name(s)
+  group: 'unpaired'
+}));
 
-
-
-        statusElement.textContent = `✅ Successfully loaded ${allPlayers.length} players from live Google Sheet data.`;
-        statusElement.className = 'text-sm text-green-700 mt-2 font-medium';
-      }
-      catch(err){
-        console.error('Error loading check-in data:', err);
-        statusElement.textContent = `❌ Failed to load live data (${err.message}). Using fallback mock data.`;
+statusElement.textContent = `❌ Failed to load live data (${err.message}). Using fallback mock data.`;
         statusElement.className = 'text-sm text-red-600 mt-2 font-medium';
         allPlayers = mockPlayers;
       }
@@ -487,6 +487,3 @@ allPlayers = rows
   </script>
 </body>
 </html>
-
-
-

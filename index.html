@@ -561,49 +561,63 @@
                 <div class="card">
                     <h2>Welcome! Let's Get Started</h2>
                     
+                   
                     <div class="input-group">
-                        <label for="player-name">Your Name</label>
-                        <input type="text" id="player-name" placeholder="Enter your name">
-                    </div>
+    <label for="player-name">Your Name</label>
+    <input type="text" id="player-name" placeholder="Enter your name">
+</div>
 
-                    <label style="display: block; font-weight: 600; color: #2d5a2e; margin-bottom: 0.5rem;">
-                        Are you a scorekeeper today?
-                    </label>
-                    <div class="radio-group">
-                        <div class="radio-option" onclick="setScorekeeper(true)">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">✓</div>
-                            <div>Yes</div>
-                            <div style="font-size: 0.75rem; color: #6c757d;">I'll keep score</div>
-                        </div>
-                        <div class="radio-option" onclick="setScorekeeper(false)">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">Tee</div>
-                            <div>No</div>
-                            <div style="font-size: 0.75rem; color: #6c757d;">Just playing</div>
-                        </div>
-                    </div>
+<!-- ADD THIS RIGHT AFTER -->
+<label style="display: block; font-weight: 600; color: #2d5a2e; margin-bottom: 0.5rem;">
+    Are you a scorekeeper today?
+</label>
+<div class="radio-group">
+    <div class="radio-option" onclick="setScorekeeper(true)">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+        <div>Yes</div>
+        <div style="font-size: 0.75rem; color: #6c757d;">I'll keep score</div>
+    </div>
+    <div class="radio-option" onclick="setScorekeeper(false)">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⛳</div>
+        <div>No</div>
+        <div style="font-size: 0.75rem; color: #6c757d;">Just playing</div>
+    </div>
+</div>
 
-                    <div class="input-group">
-                        <label for="group-select">Select Your Foursome</label>
-                        <select id="group-select">
-                            <option value="">Choose your group...</option>
-                            </select>
-                    </div>
+<div class="input-group">
+        <label for="group-select">Select Your Foursome</label>
+        <select id="group-select">
+          <option value="">Choose your group...</option>
+          <option value="group1">Group 1 - 9:00 AM Tee Time</option>
+          <option value="group2">Group 2 - 9:10 AM Tee Time</option>
+          <option value="group3">Group 3 - 9:20 AM Tee Time</option>
+          <option value="group4">Group 4 - 9:30 AM Tee Time</option>
+        </select>
+      </div>
 
-                    <div id="group-preview" class="hidden">
-                        <label style="display: block; font-weight: 600; color: #2d5a2e; margin-bottom: 0.5rem;">
-                            Your Playing Partners:
-                        </label>
-                        <div class="player-list" id="group-members"></div>
-                    </div>
+      <div id="group-preview" class="hidden">
+        <label style="display: block; font-weight: 600; color: #2d5a2e; margin-bottom: 0.5rem;">
+          Your Playing Partners:
+        </label>
+        <div class="player-list" id="group-members"></div>
+      </div>
+<!-- Course Selector -->
+<div class="input-group">
+  <label for="courseSelect">Select Course</label>
+  <select id="courseSelect">
+    <option value="">Loading courses...</option>
+  </select>
+</div>
 
-                    <button class="btn btn-primary" onclick="startRound()" id="start-btn" disabled>
-                        Start Round
-                    </button>
-                </div>
-            </div>
-        </div>
+      <button class="btn btn-primary" onclick="startRound()" id="start-btn" disabled>
+        🏌️ Start Round
+      </button>
+    </div>
+  </div>
+</div>
 
         <div id="play-view" class="view">
+            <div id="course-header" class="p-4 text-center font-bold text-fpg-primary"></div>
             <div class="content">
                 <div class="course-header">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
@@ -917,49 +931,40 @@
             preview.classList.remove('hidden');
         }
 
-        function startRound() {
-            currentPlayer = document.getElementById('player-name').value.trim();
-            const group = GROUPS_DATA[selectedGroup]; // Use DYNAMIC data
-            
-            // 1. Find the player's index in the group
-            const playerIndex = group.players.findIndex(p => p.toLowerCase() === currentPlayer.toLowerCase());
-            
-            // 2. Check if the player is a scorekeeper
-            if (isScorekeeper && playerIndex >= 0 && group.scorekeepers.includes(playerIndex)) {
-                // Determine if this player is keeper 0 or keeper 1 (used for storing their score)
-                keeperIndex = group.scorekeepers.indexOf(playerIndex);
-            } else {
-                // If they said they were a keeper but aren't listed, or if they are just a player
-                isScorekeeper = false;
-                keeperIndex = -1; // Not a designated keeper
-            }
-            
-            groupScores = group.players.map(() => 
-                Array(18).fill(null).map(() => ({
-                    score: 0,
-                    putts: 0,
-                    fairway: null,
-                    keeper0: null,
-                    keeper1: null
-                }))
-            );
-            
-            document.getElementById('group-display').textContent = group.name.split(' - ')[0];
-            
-            // Initialize the full scorekeeper interface only if they are a designated keeper
-            if (isScorekeeper && keeperIndex !== -1) {
-                initScorekeeper();
-                document.getElementById('player-selector').classList.remove('hidden');
-            } else {
-                // Hide the scorekeeper controls if not a designated keeper
-                document.getElementById('player-selector').classList.add('hidden');
-                document.getElementById('score-entry-card').classList.add('hidden');
-            }
-            
-            showView('play');
-            document.getElementById('bottom-nav').classList.remove('hidden');
-            updateHoleDisplay();
-        }
+       function startRound() {
+    currentPlayer = document.getElementById('player-name').value.trim();
+    const group = GROUPS_DATA[selectedGroup];
+
+    const playerIndex = group.players.findIndex(
+        p => p.toLowerCase() === currentPlayer.toLowerCase()
+    );
+
+    isScorekeeper = true;
+    keeperIndex = group.scorekeepers.includes(playerIndex)
+        ? group.scorekeepers.indexOf(playerIndex)
+        : 0;
+
+    groupScores = group.players.map(() =>
+        Array(18).fill(null).map(() => ({
+            score: 0,
+            putts: 0,
+            fairway: null,
+            keeper0: null,
+            keeper1: null
+        }))
+    );
+
+    document.getElementById('group-display').textContent = group.name.split(' - ')[0];
+    initScorekeeper();
+
+    document.getElementById('player-selector').classList.remove('hidden');
+    document.querySelector('.score-entry').classList.remove('hidden');
+
+    showView('play');
+    document.getElementById('bottom-nav').classList.remove('hidden');
+    updateHoleDisplay();
+}
+
 
         // ==================== SCOREKEEPER FUNCTIONS ====================
         function initScorekeeper() {
@@ -971,16 +976,15 @@
                 const btn = document.createElement('button');
                 btn.className = 'player-switch-btn';
                 btn.onclick = () => switchToPlayer(i);
-                
-                const initial = player.charAt(0);
-                const firstName = player.split(' ')[0];
-                
-                btn.innerHTML = `
-                    <div style="font-weight: bold;">${initial} ${firstName}</div>
-                    <div class="status" id="player-${i}-status">Not entered</div>
-                `;
-                switcher.appendChild(btn);
-            });
+
+    // ✅ Display full player name only
+    btn.innerHTML = `
+        <div style="font-weight: bold; font-size: 0.95rem;">${player}</div>
+        <div class="status" id="player-${i}-status">Not entered</div>
+    `;
+    switcher.appendChild(btn);
+});
+
             
             switchToPlayer(0);
             
@@ -1524,5 +1528,65 @@
             }
         }, 3000);
     </script>
+    <script>
+const courseSelect = document.getElementById('courseSelect');
+
+// 1️⃣  Load courses from your JSON Bin
+fetch('https://api.jsonbin.io/v3/b/YOUR_BIN_URL_HERE/latest')
+  .then(res => res.json())
+  .then(data => {
+    const courses = data.record;
+    courseSelect.innerHTML = '<option value="">Select a course</option>';
+    courses.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.course_name;
+      opt.textContent = c.course_name;
+      courseSelect.appendChild(opt);
+    });
+  })
+  .catch(err => {
+    console.error('Error loading courses:', err);
+    courseSelect.innerHTML = '<option>Error loading courses</option>';
+  });
+
+// 2️⃣  When player clicks “Start Round”
+function startRound() {
+  const selectedCourseName = courseSelect.value;
+  if (!selectedCourseName) {
+    alert('Please select a course first.');
+    return;
+  }
+
+  // Fetch courses again (or cache them)
+  fetch('https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest')
+    .then(res => res.json())
+    .then(data => {
+      const selectedCourse = data.record.find(
+        c => c.course_name === selectedCourseName
+      );
+
+      // Store course holes globally (so play view can render)
+      window.currentCourseHoles = selectedCourse.course_holes;
+
+      // ✅ Switch to play view
+      document.getElementById('setup-view').classList.remove('active');
+      document.getElementById('play-view').classList.add('active');
+
+      // ✅ Display course info at the top
+      renderCourseHeader(selectedCourse);
+    });
+}
+
+// 3️⃣  Display course name + par/hcp header
+function renderCourseHeader(course) {
+  const header = document.getElementById('course-header');
+  if (!header) return;
+  header.innerHTML = `
+    <h2>${course.course_name}</h2>
+    <p>18 Holes • PAR ${course.course_holes.reduce((a,b)=>a+b.par,0)}</p>
+  `;
+}
+</script>
+
 </body>
 </html>

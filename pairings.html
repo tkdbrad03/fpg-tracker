@@ -258,13 +258,7 @@
     }
 
     // ============== UI BUILDERS ==============
-    function setupContainers(){
-      teeTimeWrapper.innerHTML = '';
-      currentTeeTimes.forEach((time, idx)=>{
-        const el = document.createElement('div');
-        el.id = `group-container-${idx}`;
-        el.className = 'bg-white p-4 rounded-xl shadow-lg space-y-2 border border-gray-200 h-full';
-        function setupContainers() {
+function setupContainers() {
   teeTimeWrapper.innerHTML = '';
   currentTeeTimes.forEach((time, idx) => {
     const el = document.createElement('div');
@@ -301,6 +295,7 @@
     teeTimeWrapper.appendChild(el);
   });
 }
+
     function renderPlayers(){
       unpairedContainer.innerHTML = '';
       document.querySelectorAll('.player-drop-zone').forEach(z=>{

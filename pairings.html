@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPG Current Pairings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3c763d 0%, #2d5a2e 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tagline {
+            color: #e6b800;
+            font-size: 1rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #3c763d;
+        }
+        
+        .empty-state h2 {
+            color: #3c763d;
+            margin-bottom: 1rem;
+        }
+        
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .group-card {
+            background: #f8f9fa;
+            border: 2px solid #3c763d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+        
+        .group-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(60, 118, 61, 0.2);
+        }
+        
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #3c763d;
+        }
+        
+        .group-name {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2d5a2e;
+        }
+        
+        .tee-time {
+            background: #e6b800;
+            color: #000;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+        
+        .players-list {
+            margin-bottom: 1rem;
+        }
+        
+        .player-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3c763d;
+        }
+        
+        .player-item.scorekeeper {
+            background: #d4edda;
+            border-left-color: #e6b800;
+        }
+        
+        .player-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3c763d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        
+        .player-item.scorekeeper .player-icon {
+            background: #e6b800;
+            color: #000;
+        }
+        
+        .player-info {
+            flex: 1;
+        }
+        
+        .player-name {
+            font-weight: bold;
+            color: #2d5a2e;
+            font-size: 1rem;
+        }
+        
+        .player-role {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        .scorekeepers-note {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .scorekeepers-note strong {
+            color: #856404;
+        }
+        
+        .app-link {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #fffdf5;
+            border: 2px solid #e6b800;
+            border-radius: 12px;
+        }
+        
+        .app-link a {
+            display: inline-block;
+            background: #e6b800;
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.125rem;
+            transition: all 0.2s;
+        }
+        
+        .app-link a:hover {
+            background: #d4a600;
+            transform: translateY(-2px);
+        }
+        
+        .published-date {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .groups-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .group-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png" alt="FPG Logo">
+            </div>
+            <h1>FPG Current Pairings</h1>
+            <p class="tagline">Good Golf • Good Friends • Good Times</p>
+        </div>
+
+        <div class="content">
+            <div id="pairings-container">
+                <div class="empty-state">
+                    <div class="empty-icon">-</div>
+                    <h2>No pairings available yet</h2>
+                    <p>Pairings will appear here once published by the tournament organizer.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadPairings() {
+            const pairingsData = localStorage.getItem('fpg_pairings');
+            const container = document.getElementById('pairings-container');
+            
+            if (!pairingsData) {
+                // Show empty state
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">-</div>
+                        <h2>No pairings available yet</h2>
+                        <p>Pairings will appear here once published by the tournament organizer.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(pairingsData);
+                const publishDate = new Date(data.date);
+                
+                let html = '<div class="groups-grid">';
+                
+                data.groups.forEach((group, index) => {
+                    html += `
+                        <div class="group-card">
+                            <div class="group-header">
+                                <div class="group-name">${group.name}</div>
+                                <div class="tee-time">${group.teeTime}</div>
+                            </div>
+                            
+                            <div class="players-list">
+                                ${group.players.map((player, pIndex) => {
+                                    const isKeeper1 = group.scorekeepers[0] === player;
+                                    const isKeeper2 = group.scorekeepers[1] === player;
+                                    const isScorekeeper = isKeeper1 || isKeeper2;
+                                    
+                                    return `
+                                        <div class="player-item ${isScorekeeper ? 'scorekeeper' : ''}">
+                                            <div class="player-icon">${player.charAt(0)}</div>
+                                            <div class="player-info">
+                                                <div class="player-name">${player}</div>
+                                                ${isScorekeeper ? 
+                                                    `<div class="player-role">Scorekeeper ${isKeeper1 ? '1' : '2'}</div>` : 
+                                                    '<div class="player-role">Player</div>'
+                                                }
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                            
+                            ${group.scorekeepers[0] || group.scorekeepers[1] ? `
+                                <div class="scorekeepers-note">
+                                    <strong>Scorekeepers:</strong> ${group.scorekeepers[0] || 'TBD'} & ${group.scorekeepers[1] || 'TBD'}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                
+                // Add app link
+                html += `
+                    <div class="app-link">
+                        <p style="margin-bottom: 1rem; color: #0c5460; font-weight: bold;">Scorekeepers: Open the app to enter scores!</p>
+                        <a href="https://tkdbrad03.github.io/fpg-tracker/" target="_blank">
+                            Open Scorekeeper App →
+                        </a>
+                    </div>
+                `;
+                
+                // Add published date
+                html += `
+                    <div class="published-date">
+                        Published ${publishDate.toLocaleString('en-US', { 
+                            weekday: 'long', 
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit'
+                        })}
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading pairings:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">!</div>
+                        <h2>Error loading pairings</h2>
+                        <p>Please try refreshing the page.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load pairings on page load
+        loadPairings();
+        
+        // Listen for storage changes (in case pairings are updated in another tab)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'fpg_pairings') {
+                loadPairings();
+            }
+        });
+        
+        // Refresh every 30 seconds
+        setInterval(loadPairings, 30000);
+    </script>
+</body>
+</html>

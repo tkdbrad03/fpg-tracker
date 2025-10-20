@@ -33,8 +33,8 @@
         }
         
         .logo {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             margin: 0 auto 1rem;
             display: flex;
             align-items: center;
@@ -45,6 +45,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
         }
         
         .header h1 {
@@ -548,14 +549,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">
-                <img src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png" alt="Florida Players Group Logo">
+            <div class="logo" style="font-size: 4rem;">
+                FPG
             </div>
             <h1>Florida Players Group</h1>
             <p class="tagline">Good Golf • Good Friends • Good Times</p>
         </div>
 
-        <!-- Setup View -->
         <div id="setup-view" class="view active">
             <div class="content">
                 <div class="card">
@@ -576,7 +576,7 @@
                             <div style="font-size: 0.75rem; color: #6c757d;">I'll keep score</div>
                         </div>
                         <div class="radio-option" onclick="setScorekeeper(false)">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">✗</div>
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">Tee</div>
                             <div>No</div>
                             <div style="font-size: 0.75rem; color: #6c757d;">Just playing</div>
                         </div>
@@ -586,11 +586,7 @@
                         <label for="group-select">Select Your Foursome</label>
                         <select id="group-select">
                             <option value="">Choose your group...</option>
-                            <option value="group1">Group 1 - 9:00 AM Tee Time</option>
-                            <option value="group2">Group 2 - 9:10 AM Tee Time</option>
-                            <option value="group3">Group 3 - 9:20 AM Tee Time</option>
-                            <option value="group4">Group 4 - 9:30 AM Tee Time</option>
-                        </select>
+                            </select>
                     </div>
 
                     <div id="group-preview" class="hidden">
@@ -607,7 +603,6 @@
             </div>
         </div>
 
-        <!-- Play View -->
         <div id="play-view" class="view">
             <div class="content">
                 <div class="course-header">
@@ -643,7 +638,7 @@
                     <div style="color: #6c757d; font-size: 0.875rem; margin: 0.5rem 0 1rem;">yards to center</div>
                 </div>
 
-                <div class="player-selector" id="player-selector">
+                <div class="player-selector hidden" id="player-selector">
                     <div style="font-size: 0.875rem; font-weight: 600; color: #2d5a2e; margin-bottom: 0.75rem;">
                         Entering Score For:
                     </div>
@@ -652,12 +647,12 @@
                             <div style="font-weight: bold; font-size: 1.125rem;" id="current-player-name">Player</div>
                             <div style="font-size: 0.75rem; color: #6c757d;" id="current-player-status">Tap to switch</div>
                         </div>
-                        <div style="font-size: 1.5rem;">👤</div>
+                        <div style="font-size: 1.5rem;">P</div>
                     </div>
                     <div class="player-switcher" id="player-switcher"></div>
                 </div>
 
-                <div class="score-entry">
+                <div class="score-entry hidden">
                     <div style="margin-bottom: 0.75rem;">
                         <label style="display: block; font-size: 0.875rem; color: #6c757d; margin-bottom: 0.5rem; font-weight: 600;">Score</label>
                         <div class="button-grid button-grid-8" id="score-buttons"></div>
@@ -683,7 +678,6 @@
             </div>
         </div>
 
-        <!-- Group Scorecard View -->
         <div id="scorecard-view" class="view">
             <div class="content">
                 <div class="card">
@@ -695,7 +689,6 @@
             </div>
         </div>
 
-        <!-- Stats View -->
         <div id="stats-view" class="view">
             <div class="content">
                 <div class="card">
@@ -714,7 +707,6 @@
             </div>
         </div>
 
-        <!-- Live Leaderboard View -->
         <div id="live-view" class="view">
             <div class="content">
                 <div class="refresh-notice">
@@ -736,26 +728,25 @@
             </div>
         </div>
 
-        <!-- Bottom Navigation -->
         <div class="bottom-nav hidden" id="bottom-nav">
             <button class="nav-item" onclick="showView('setup')">
-                <div class="nav-icon">⌂</div>
+                <div class="nav-icon">H</div>
                 <div>Home</div>
             </button>
             <button class="nav-item active" onclick="showView('play')">
-                <div class="nav-icon">•</div>
+                <div class="nav-icon">P</div>
                 <div>Play</div>
             </button>
             <button class="nav-item" onclick="showView('scorecard')">
-                <div class="nav-icon">▦</div>
+                <div class="nav-icon">C</div>
                 <div>Card</div>
             </button>
             <button class="nav-item" onclick="showView('stats')">
-                <div class="nav-icon">≡</div>
+                <div class="nav-icon">S</div>
                 <div>Stats</div>
             </button>
             <button class="nav-item" onclick="showView('live')">
-                <div class="nav-icon">★</div>
+                <div class="nav-icon">L</div>
                 <div>Live</div>
             </button>
         </div>
@@ -763,81 +754,28 @@
 
     <script>
         // ==================== CONFIGURATION ====================
-        // Florida Players Group Google Sheet
+        // Bin ID for the published pairings (from the Pairing Manager)
+        const BIN_ID = '68f6557dae596e708f1f69d1';
+        const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+        
+        // Google Sheet setup (for simulated score submission)
         const GOOGLE_SHEET_ID = '152dK2m3gluxCdBal9GGLs43aDKFBvy5BiHdnKL3gV4o';
         const SHEET_NAME = 'Live Scores';
         const ROUND_DATE = new Date().toISOString().split('T')[0]; // Today's date
         
-        // ==================== COURSE DATA ====================
-        const PARS = [4, 3, 5, 4, 4, 3, 4, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4];
-        const YARDS = [381, 167, 512, 385, 392, 178, 401, 528, 415, 394, 182, 545, 398, 367, 156, 421, 538, 405];
+        // ==================== COURSE DATA (Now Dynamic) ====================
+        let COURSE_DATA = []; // Will store { hole_number, par, yards, hcp } for 18 holes
         
-        // ==================== GROUP DATA ====================
-        // Load groups from pairing dashboard or use defaults
-        function loadPairings() {
-            const saved = localStorage.getItem('fpg_pairings');
-            if (!saved) {
-                console.log('No pairings found in localStorage, using default groups');
-                return null;
-            }
-            
-            try {
-                const data = JSON.parse(saved);
-                const groups = {};
-                
-                data.groups.forEach((g, index) => {
-                    const groupKey = `group${index + 1}`;
-                    
-                    // Find scorekeeper indices
-                    const keeper1Index = g.scorekeepers[0] ? g.players.findIndex(p => p === g.scorekeepers[0]) : 0;
-                    const keeper2Index = g.scorekeepers[1] ? g.players.findIndex(p => p === g.scorekeepers[1]) : 1;
-                    
-                    groups[groupKey] = {
-                        name: `${g.name} - ${g.teeTime}`,
-                        players: g.players,
-                        scorekeepers: [keeper1Index, keeper2Index]
-                    };
-                });
-                
-                console.log('Loaded pairings from dashboard:', groups);
-                return groups;
-            } catch (error) {
-                console.error('Error loading pairings:', error);
-                return null;
-            }
-        }
-        
-        // Try to load from dashboard, otherwise use default groups
-        const GROUPS = loadPairings() || {
-            group1: {
-                name: 'Group 1 - 9:00 AM',
-                players: ['John Smith', 'Mike Johnson', 'Steve Williams', 'Dave Martinez'],
-                scorekeepers: [0, 1]
-            },
-            group2: {
-                name: 'Group 2 - 9:10 AM',
-                players: ['Tom Brown', 'Bob Davis', 'Jim Wilson', 'Ron Taylor'],
-                scorekeepers: [0, 1]
-            },
-            group3: {
-                name: 'Group 3 - 9:20 AM',
-                players: ['Dan Anderson', 'Chris Thomas', 'Paul Jackson', 'Mark White'],
-                scorekeepers: [0, 1]
-            },
-            group4: {
-                name: 'Group 4 - 9:30 AM',
-                players: ['Ken Harris', 'Joe Martin', 'Bill Thompson', 'Gary Garcia'],
-                scorekeepers: [0, 1]
-            }
-        };
+        // ==================== GROUP DATA (now dynamic) ====================
+        let liveGroups = {}; // Stores fetched and processed groups
         
         // ==================== STATE ====================
         let currentPlayer = '';
         let isScorekeeper = false;
-        let selectedGroup = '';
+        let selectedGroupKey = ''; // Key (e.g., 'group1') for liveGroups
         let currentHole = 0;
         let currentScoringPlayer = 0;
-        let keeperIndex = 0;
+        let keeperIndex = -1; // 0 for Keeper 1, 1 for Keeper 2
         let groupScores = [];
         let liveRefreshInterval = null;
         
@@ -850,10 +788,81 @@
             updateStartButton();
         }
         
+        // ----------------------------------------------------
+        // NEW FUNCTION: Load groups and course data from the live pairings data
+        // ----------------------------------------------------
+        async function loadGroupData() {
+            try {
+                const selectEl = document.getElementById('group-select');
+                selectEl.innerHTML = '<option value="">Loading data...</option>';
+                
+                const res = await fetch(API_URL, { cache: 'no-store' });
+                if (!res.ok) throw new Error('Failed to load pairings.');
+                const data = await res.json();
+                const allData = data.record; // Should contain groups and course_holes
+                
+                // 1. Process Course Data
+                if (allData.course_holes && Array.isArray(allData.course_holes) && allData.course_holes.length === 18) {
+                    COURSE_DATA = allData.course_holes;
+                    document.querySelector('.course-header strong').textContent = allData.course_name || 'Current Course';
+                } else {
+                    // Fallback or Error if course data is missing
+                    selectEl.innerHTML = '<option value="">Error: Course data missing/invalid.</option>';
+                    console.error('Course data not found in JSON Bin. Please check structure.');
+                    return; 
+                }
+
+                // 2. Process Group Data
+                const pairings = allData.groups;
+
+                if (!Array.isArray(pairings) || pairings.length === 0) {
+                    selectEl.innerHTML = '<option value="">No published groups found</option>';
+                    return;
+                }
+
+                liveGroups = {};
+                selectEl.innerHTML = '<option value="">Choose your group...</option>';
+
+                pairings.forEach(group => {
+                    const key = `group${group.group_number}`;
+                    
+                    // Transform the live data structure into a usable format
+                    liveGroups[key] = {
+                        name: `Group ${group.group_number} - ${group.tee_time}`,
+                        players: group.players.map(p => p.name), // Extract just the names
+                        teeTime: group.tee_time,
+                        scorekeeper1: group.scorekeeper1 || null,
+                        scorekeeper2: group.scorekeeper2 || null
+                    };
+                    
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = liveGroups[key].name;
+                    selectEl.appendChild(option);
+                });
+                
+                // Try to restore previous selection if any
+                const storedGroup = localStorage.getItem('fpg_selected_group_key');
+                if(storedGroup && liveGroups[storedGroup]) {
+                    selectEl.value = storedGroup;
+                    selectedGroupKey = storedGroup;
+                    showGroupPreview();
+                }
+
+            } catch (err) {
+                console.error('Error loading live data:', err);
+                document.getElementById('group-select').innerHTML = '<option value="">Error loading groups. Check connection.</option>';
+            }
+        }
+        
         document.getElementById('group-select').addEventListener('change', function() {
-            selectedGroup = this.value;
-            if (selectedGroup) {
+            selectedGroupKey = this.value;
+            if (selectedGroupKey) {
                 showGroupPreview();
+                localStorage.setItem('fpg_selected_group_key', selectedGroupKey);
+            } else {
+                document.getElementById('group-preview').classList.add('hidden');
+                localStorage.removeItem('fpg_selected_group_key');
             }
             updateStartButton();
         });
@@ -862,26 +871,33 @@
         
         function updateStartButton() {
             const name = document.getElementById('player-name').value.trim();
-            const hasGroup = selectedGroup !== '';
+            const hasGroup = selectedGroupKey !== '';
             const btn = document.getElementById('start-btn');
-            btn.disabled = !(name && hasGroup);
+            // Ensure course data is loaded as well
+            btn.disabled = !(name && hasGroup && COURSE_DATA.length === 18);
         }
         
         function showGroupPreview() {
             const preview = document.getElementById('group-preview');
             const membersList = document.getElementById('group-members');
-            const group = GROUPS[selectedGroup];
+            const group = liveGroups[selectedGroupKey];
+            
+            if (!group) return;
             
             membersList.innerHTML = '';
             group.players.forEach((player, i) => {
-                const isKeeper = group.scorekeepers.includes(i);
+                // Check if player name matches either scorekeeper name
+                const isKeeper = player === group.scorekeeper1 || player === group.scorekeeper2;
+                const keeperRole = player === group.scorekeeper1 ? 'Scorekeeper 1' : 
+                                   player === group.scorekeeper2 ? 'Scorekeeper 2' : 'Player';
+                
                 const div = document.createElement('div');
                 div.className = 'player-item' + (isKeeper ? ' scorekeeper' : '');
                 div.innerHTML = `
                     <div class="player-icon">${player.charAt(0)}</div>
                     <div class="player-info">
                         <div class="player-name">${player}</div>
-                        <div class="player-role">${isKeeper ? 'Scorekeeper' : 'Player'}</div>
+                        <div class="player-role">${isKeeper ? `✓ ${keeperRole}` : 'Player'}</div>
                     </div>
                 `;
                 membersList.appendChild(div);
@@ -891,12 +907,28 @@
         }
         
         function startRound() {
-            currentPlayer = document.getElementById('player-name').value.trim();
-            const group = GROUPS[selectedGroup];
+            if (COURSE_DATA.length !== 18) {
+                alert("Error: Course data is missing or incomplete (must have 18 holes).");
+                return;
+            }
             
-            const playerIndex = group.players.findIndex(p => p.toLowerCase().includes(currentPlayer.toLowerCase()));
-            if (playerIndex >= 0 && group.scorekeepers.includes(playerIndex)) {
-                keeperIndex = group.scorekeepers.indexOf(playerIndex);
+            currentPlayer = document.getElementById('player-name').value.trim();
+            const group = liveGroups[selectedGroupKey];
+            
+            // 1. Find player index
+            const playerIndex = group.players.findIndex(p => p.toLowerCase().trim() === currentPlayer.toLowerCase().trim());
+            
+            // 2. Determine keeper status
+            keeperIndex = -1;
+            if (isScorekeeper) {
+                if (currentPlayer === group.scorekeeper1) {
+                    keeperIndex = 0;
+                } else if (currentPlayer === group.scorekeeper2) {
+                    keeperIndex = 1;
+                } else {
+                    // User claimed scorekeeper role but does not match assigned K1 or K2.
+                    isScorekeeper = false; 
+                }
             }
             
             groupScores = group.players.map(() => 
@@ -911,9 +943,26 @@
             
             document.getElementById('group-display').textContent = group.name.split(' - ')[0];
             
+            const scoreEntry = document.querySelector('.score-entry');
+
             if (isScorekeeper) {
                 initScorekeeper();
+                document.getElementById('player-selector').classList.remove('hidden');
+                scoreEntry.classList.remove('hidden');
+                scoreEntry.previousElementSibling.style.marginBottom = ''; 
+            } else {
+                // If not a scorekeeper, hide score controls and set the yards to a static message
+                document.getElementById('distance-yards').textContent = '—';
+                document.getElementById('current-player-status').textContent = 'Viewing Only';
+                document.getElementById('player-selector').classList.add('hidden');
+                scoreEntry.classList.add('hidden');
+                scoreEntry.previousElementSibling.style.marginBottom = '0';
             }
+            
+            // Set the distance display to a static message for now
+            document.querySelector('.distance-display div:nth-child(3)').textContent = 'Yards to center (disabled)';
+            document.getElementById('distance-yards').textContent = 'N/A';
+            document.getElementById('distance-yards').style.fontSize = '3rem';
             
             showView('play');
             document.getElementById('bottom-nav').classList.remove('hidden');
@@ -922,7 +971,7 @@
         
         // ==================== SCOREKEEPER FUNCTIONS ====================
         function initScorekeeper() {
-            const group = GROUPS[selectedGroup];
+            const group = liveGroups[selectedGroupKey]; // Use liveGroups[selectedGroupKey]
             const switcher = document.getElementById('player-switcher');
             switcher.innerHTML = '';
             
@@ -976,7 +1025,7 @@
         
         function switchToPlayer(playerIndex) {
             currentScoringPlayer = playerIndex;
-            const group = GROUPS[selectedGroup];
+            const group = liveGroups[selectedGroupKey]; // Use liveGroups[selectedGroupKey]
             const playerName = group.players[playerIndex];
             
             document.getElementById('current-player-name').textContent = playerName;
@@ -1000,7 +1049,7 @@
                 hole.score = score;
             }
             
-            // Submit to Google Sheets
+            // Submit to Google Sheets (simulated)
             submitScoreToSheet(currentScoringPlayer, currentHole, score);
             
             updateButtonStates();
@@ -1070,19 +1119,20 @@
             
             if (hasKeeper0 && hasKeeper1) {
                 const match = hole.keeper0.score === hole.keeper1.score;
+                const icon = match ? '✓' : 'X'; // Use V/X for Verified/Mismatch
                 display.innerHTML = `
                     <div class="verification-status ${match ? 'verified' : 'mismatch'}">
-                        ${match ? 'VERIFIED:' : 'MISMATCH:'} 
+                        ${icon} 
                         ${match ? 
                             'Both scorekeepers agree!' : 
-                            `Keeper 1 = ${hole.keeper0.score}, Keeper 2 = ${hole.keeper1.score}`
+                            `Mismatch: Keeper 1 = ${hole.keeper0.score}, Keeper 2 = ${hole.keeper1.score}`
                         }
                     </div>
                 `;
             } else if (hasKeeper0 || hasKeeper1) {
                 display.innerHTML = `
                     <div class="verification-status pending">
-                        PENDING: Waiting for second scorekeeper
+                        ... Waiting for second scorekeeper
                     </div>
                 `;
             }
@@ -1106,16 +1156,18 @@
         }
         
         function updateHoleDisplay() {
-            document.getElementById('hole-number').textContent = currentHole + 1;
-            document.getElementById('hole-par').textContent = PARS[currentHole];
-            document.getElementById('hole-yards').textContent = YARDS[currentHole];
-            document.getElementById('hole-hcp').textContent = currentHole + 1;
+            const hole = COURSE_DATA[currentHole];
+            if (!hole) return;
             
-            updateButtonStates();
-            updateVerificationDisplay();
+            document.getElementById('hole-number').textContent = hole.hole_number;
+            document.getElementById('hole-par').textContent = hole.par;
+            document.getElementById('hole-yards').textContent = hole.yards;
+            document.getElementById('hole-hcp').textContent = hole.hcp;
             
-            if (isScorekeeper) {
-                GROUPS[selectedGroup].players.forEach((_, i) => updatePlayerStatus(i));
+            if(isScorekeeper) {
+                updateButtonStates();
+                updateVerificationDisplay();
+                liveGroups[selectedGroupKey].players.forEach((_, i) => updatePlayerStatus(i));
             }
         }
         
@@ -1133,13 +1185,13 @@
             }
         }
         
-        // ==================== GOOGLE SHEETS INTEGRATION ====================
+        // ==================== GOOGLE SHEETS INTEGRATION (SIMULATED) ====================
         function submitScoreToSheet(playerIndex, holeNum, score) {
-            const group = GROUPS[selectedGroup];
+            const group = liveGroups[selectedGroupKey]; // Use liveGroups[selectedGroupKey]
             const playerName = group.players[playerIndex];
-            const par = PARS[holeNum];
+            const par = COURSE_DATA[holeNum].par; // Read PAR dynamically
             const stableford = getStablefordPoints(score, par);
-            const keeperName = `Keeper ${keeperIndex + 1}`;
+            const keeperName = currentPlayer; // Use the actual current user's name
             
             // Check if both keepers have entered this score
             const hole = groupScores[playerIndex][holeNum];
@@ -1159,13 +1211,17 @@
                 verified
             ];
             
-            // Submit to Google Sheets via Google Form (easier than direct API)
-            // For production, you'd create a Google Form connected to your sheet
-            // or use Google Apps Script Web App
-            
-            // Store in localStorage as backup
+            // Store in localStorage as backup/live data source for other views
             const storageKey = `fpg_scores_${ROUND_DATE}`;
             let allScores = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+            // Remove existing score for this player/hole to prevent duplicates/updates
+            allScores = allScores.filter(s => !(
+                s.player === playerName &&
+                s.hole === holeNum + 1 &&
+                s.scorekeeper === keeperName // Only remove score entered by this keeper
+            ));
+
             allScores.push({
                 timestamp: new Date().toISOString(),
                 roundDate: ROUND_DATE,
@@ -1222,7 +1278,7 @@
         // ==================== GROUP SCORECARD ====================
         function updateGroupScorecard() {
             const table = document.getElementById('group-scorecard-table');
-            const group = GROUPS[selectedGroup];
+            const group = liveGroups[selectedGroupKey]; // Use liveGroups[selectedGroupKey]
             
             let html = '<thead><tr>';
             html += '<th>Hole</th><th>Par</th>';
@@ -1232,7 +1288,10 @@
             html += '</tr></thead><tbody>';
             
             for (let hole = 0; hole < 18; hole++) {
-                html += `<tr><td><strong>${hole + 1}</strong></td><td>${PARS[hole]}</td>`;
+                const holeNumber = COURSE_DATA[hole].hole_number;
+                const par = COURSE_DATA[hole].par;
+                
+                html += `<tr><td><strong>${holeNumber}</strong></td><td>${par}</td>`;
                 
                 group.players.forEach((_, playerIdx) => {
                     const holeData = groupScores[playerIdx][hole];
@@ -1242,7 +1301,8 @@
                     const mismatch = hasK0 && hasK1 && holeData.keeper0.score !== holeData.keeper1.score;
                     
                     const score = holeData.score || (hasK0 ? holeData.keeper0.score : (hasK1 ? holeData.keeper1.score : '-'));
-                    const icon = verified ? '✓' : (mismatch ? '✗' : (hasK0 || hasK1 ? '...' : ''));
+                    // Use V/M/P for Verified/Mismatch/Pending
+                    const icon = verified ? 'V' : (mismatch ? 'M' : (hasK0 || hasK1 ? 'P' : ''));
                     
                     html += `<td>${score} ${icon}</td>`;
                 });
@@ -1255,7 +1315,7 @@
         
         // ==================== GROUP STATS ====================
         function updateGroupStats() {
-            const group = GROUPS[selectedGroup];
+            const group = liveGroups[selectedGroupKey]; // Use liveGroups[selectedGroupKey]
             const leaderboard = document.getElementById('group-leaderboard');
             const statusDiv = document.getElementById('scorekeeper-status');
             
@@ -1267,6 +1327,7 @@
                 let mismatches = 0;
                 
                 groupScores[idx].forEach((hole, holeIdx) => {
+                    const holePar = COURSE_DATA[holeIdx].par; // Read PAR dynamically
                     const hasK0 = hole.keeper0?.score > 0;
                     const hasK1 = hole.keeper1?.score > 0;
                     
@@ -1274,7 +1335,7 @@
                         if (hole.keeper0.score === hole.keeper1.score) {
                             verified++;
                             totalScore += hole.keeper0.score;
-                            stableford += getStablefordPoints(hole.keeper0.score, PARS[holeIdx]);
+                            stableford += getStablefordPoints(hole.keeper0.score, holePar);
                         } else {
                             mismatches++;
                         }
@@ -1282,7 +1343,7 @@
                         pending++;
                         const score = hasK0 ? hole.keeper0.score : hole.keeper1.score;
                         totalScore += score;
-                        stableford += getStablefordPoints(score, PARS[holeIdx]);
+                        stableford += getStablefordPoints(score, holePar);
                     }
                 });
                 
@@ -1306,8 +1367,8 @@
             lbHtml += '</div>';
             leaderboard.innerHTML = lbHtml;
             
-            const keeper1 = group.players[group.scorekeepers[0]];
-            const keeper2 = group.players[group.scorekeepers[1]];
+            const keeper1 = group.scorekeeper1 || 'None Assigned';
+            const keeper2 = group.scorekeeper2 || 'None Assigned';
             
             let totalVerified = 0;
             let totalMismatches = 0;
@@ -1318,7 +1379,7 @@
             
             statusDiv.innerHTML = `
                 <div style="margin-bottom: 1rem;">
-                    <div style="font-weight: bold; margin-bottom: 0.5rem;">Scorekeepers:</div>
+                    <div style="font-weight: bold; margin-bottom: 0.5rem;">Assigned Scorekeepers:</div>
                     <div>${keeper1}</div>
                     <div>${keeper2}</div>
                 </div>
@@ -1330,15 +1391,16 @@
         }
         
         function submitGroupScores() {
-            const group = GROUPS[selectedGroup];
+            const group = liveGroups[selectedGroupKey]; // Use liveGroups[selectedGroupKey]
             const finalScores = group.players.map((name, idx) => {
                 let totalScore = 0;
                 let stableford = 0;
                 
                 groupScores[idx].forEach((hole, holeIdx) => {
                     const score = hole.score || hole.keeper0?.score || hole.keeper1?.score || 0;
+                    const holePar = COURSE_DATA[holeIdx].par; // Read PAR dynamically
                     totalScore += score;
-                    stableford += getStablefordPoints(score, PARS[holeIdx]);
+                    stableford += getStablefordPoints(score, holePar);
                 });
                 
                 return { name, totalScore, stableford };
@@ -1352,7 +1414,7 @@
             
             localStorage.setItem('fpg_group_round', JSON.stringify(roundData));
             
-            alert('✓ Group scores submitted to FPG!\n\n' + 
+            alert('Group scores submitted to FPG!\n\n' + 
                   finalScores.map((s, i) => `${i+1}. ${s.name}: ${s.stableford} pts`).join('\n'));
         }
         
@@ -1367,7 +1429,7 @@
             if (allScores.length === 0) {
                 leaderboard.innerHTML = `
                     <div style="text-align: center; padding: 2rem; color: #6c757d;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">-</div>
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">---</div>
                         <div style="font-weight: bold; margin-bottom: 0.5rem;">No scores yet</div>
                         <div>Scorekeepers will submit scores as they play</div>
                     </div>
@@ -1451,13 +1513,7 @@
             }
         }
         
-        // ==================== GPS SIMULATION ====================
-        setInterval(() => {
-            if (document.getElementById('play-view').classList.contains('active')) {
-                const dist = Math.max(50, Math.floor(Math.random() * 300));
-                document.getElementById('distance-yards').textContent = dist;
-            }
-        }, 3000);
+        document.addEventListener('DOMContentLoaded', loadGroupData);
     </script>
 </body>
 </html>

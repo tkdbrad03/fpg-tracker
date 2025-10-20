@@ -1532,22 +1532,27 @@
 const courseSelect = document.getElementById('courseSelect');
 
 // 1️⃣  Load courses from your JSON Bin
-fetch('https://api.jsonbin.io/v3/b/YOUR_BIN_URL_HERE/latest')
-  .then(res => res.json())
-  .then(data => {
-    const courses = data.record;
-    courseSelect.innerHTML = '<option value="">Select a course</option>';
-    courses.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.course_name;
-      opt.textContent = c.course_name;
-      courseSelect.appendChild(opt);
-    });
-  })
-  .catch(err => {
-    console.error('Error loading courses:', err);
-    courseSelect.innerHTML = '<option>Error loading courses</option>';
+fetch('https://api.jsonbin.io/v3/b/66f4aa2f8b1234567890abcdef/latest', {
+  headers: {
+    'X-Master-Key': '$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O'
+  }
+})
+.then(res => res.json())
+.then(data => {
+  const courses = data.record;
+  courseSelect.innerHTML = '<option value="">Select a course</option>';
+  courses.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.course_name;
+    opt.textContent = c.course_name;
+    courseSelect.appendChild(opt);
   });
+})
+.catch(err => {
+  console.error('Error loading courses:', err);
+  courseSelect.innerHTML = '<option>Error loading courses</option>';
+});
+
 
 // 2️⃣  When player clicks “Start Round”
 function startRound() {

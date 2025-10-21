@@ -2,27 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FPG Scorekeeper - Start Screen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
       background-color: #f9fafb;
-      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    .selected { background-color:#3c763d !important; color:#fff !important; }
+    .selected {
+      background-color: #3c763d !important;
+      color: #fff !important;
+    }
   </style>
 </head>
 
-<body class="flex flex-col items-center min-h-screen">
-  <!-- Top Header Bar -->
-  <header class="w-full bg-gradient-to-r from-[#3c763d] to-[#2d5a2e] py-4 text-center text-white shadow">
-    <h1 class="text-xl font-bold tracking-wide">FPG — Florida Players Group</h1>
-  </header>
+<body class="flex flex-col items-center justify-center min-h-screen">
 
   <!-- Logo -->
-  <div class="mt-8 mb-6">
-    <img src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png" alt="FPG Logo" class="w-48 mx-auto"/>
+  <div class="mb-6">
+    <img 
+      src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
+      alt="FPG Logo"
+      class="w-36 mx-auto"
+    />
   </div>
 
   <!-- Scorekeeper Choice -->
@@ -48,107 +51,66 @@
   </div>
 
   <!-- Continue Button -->
-  <div class="mt-6 text-center mb-12">
-    <button id="continue-btn" class="py-2 px-6 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition">
+  <div class="mt-6 text-center">
+    <button 
+      id="continue-btn" 
+      class="py-2 px-6 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition"
+    >
       Continue
     </button>
   </div>
 
+  <!-- Script -->
   <script>
-    // ==============================
-    // CONFIG
-    // ==============================
     const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
     let courses = [];
-    let selectedCourse = null; // object
-    let selectedGroup = null;  // index (string from <select>)
-    let isScorekeeper = false;
+    let selectedCourse = null;
+    let selectedGroup = null;
+    let isScorekeeper = null;
 
     // ==============================
-    // Helpers: normalize JSONBin shapes
-    // ==============================
-    function normalizeCourses(payload) {
-      // Case A: array of course objects [{course_name, groups:[...]}]
-      if (Array.isArray(payload) && payload.length && payload[0].course_name) {
-        return payload;
-      }
-      // Case B: single course object
-      if (payload && payload.course_name) {
-        return [payload];
-      }
-      // Case C: { courses: { "Course Name": [holes...] } }  -> names only
-      if (payload && payload.courses && typeof payload.courses === "object") {
-        return Object.keys(payload.courses).map(name => ({ course_name: name, groups: [] }));
-      }
-      return [];
-    }
-
-    function extractPayload(data) {
-      // JSONBin common wrappers
-      // 1) { record: ... }
-      if (data && data.record) return data.record;
-      // 2) [ { record: ... } ]
-      if (Array.isArray(data) && data[0]?.record) return data[0].record;
-      // 3) raw array or object already
-      return data;
-    }
-
-    // ==============================
-    // Load Courses
+    // Load Courses from JSONBin
     // ==============================
     async function loadCourses() {
-      const courseSelect = document.getElementById("course-select");
-
       try {
-        const res = await fetch(BIN_URL, {
-          headers: { "X-Bin-Meta": "false" },
-          cache: "no-store" // avoid stale cache
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await fetch(BIN_URL);
         const data = await res.json();
 
-        const payload = extractPayload(data);
-        courses = normalizeCourses(payload);
+        // Handle all JSONBin formats
+        courses = (data.record?.[0]?.record) || (data[0]?.record) || data.record || data;
 
-        if (!Array.isArray(courses) || courses.length === 0) {
-          courseSelect.innerHTML = '<option value="">No courses found</option>';
-          console.warn("No courses parsed from JSONBin. Raw data:", data);
-          return;
-        }
-
-        // Populate dropdown
+        const courseSelect = document.getElementById("course-select");
         courseSelect.innerHTML = '<option value="">Select a course</option>';
+
         courses.forEach((c, index) => {
           const opt = document.createElement("option");
-          opt.value = String(index);
-          opt.textContent = c.course_name || `Course ${index + 1}`;
+          opt.value = index;
+          opt.textContent = c.course_name;
           courseSelect.appendChild(opt);
         });
       } catch (err) {
         console.error("Error loading courses:", err);
-        courseSelect.innerHTML = '<option value="">Error loading courses</option>';
       }
     }
 
     // ==============================
-    // Handlers
+    // When a Course is Selected
     // ==============================
-    document.getElementById("course-select").addEventListener("change", function () {
+    document.getElementById("course-select").addEventListener("change", function() {
       const index = this.value;
       const groupSelect = document.getElementById("group-select");
       groupSelect.innerHTML = "";
 
       if (index === "") {
-        selectedCourse = null;
         groupSelect.innerHTML = '<option value="">Select a course first</option>';
         return;
       }
 
-      selectedCourse = courses[Number(index)];
-      const groups = selectedCourse?.groups || [];
+      selectedCourse = courses[index];
+      const groups = selectedCourse.groups || [];
 
-      if (!groups.length) {
+      if (groups.length === 0) {
         groupSelect.innerHTML = '<option value="">No groups found</option>';
         return;
       }
@@ -156,53 +118,64 @@
       groupSelect.innerHTML = '<option value="">Select a group</option>';
       groups.forEach((g, i) => {
         const opt = document.createElement("option");
-        opt.value = String(i);
+        opt.value = i;
         opt.textContent = `Group ${g.group_number} - ${g.tee_time}`;
         groupSelect.appendChild(opt);
       });
     });
 
-    document.getElementById("group-select").addEventListener("change", function () {
-      selectedGroup = this.value !== "" ? this.value : null;
+    // ==============================
+    // Group Selection
+    // ==============================
+    document.getElementById("group-select").addEventListener("change", function() {
+      const val = this.value;
+      selectedGroup = val !== "" ? val : null;
     });
 
-    document.getElementById("yes-scorekeeper").addEventListener("click", function () {
+    // ==============================
+    // Scorekeeper Toggle Buttons
+    // ==============================
+    document.getElementById("yes-scorekeeper").addEventListener("click", function() {
       isScorekeeper = true;
       this.classList.add("selected");
       document.getElementById("no-scorekeeper").classList.remove("selected");
     });
 
-    document.getElementById("no-scorekeeper").addEventListener("click", function () {
+    document.getElementById("no-scorekeeper").addEventListener("click", function() {
       isScorekeeper = false;
       this.classList.add("selected");
       document.getElementById("yes-scorekeeper").classList.remove("selected");
     });
 
-    document.getElementById("continue-btn").addEventListener("click", function () {
+    // ==============================
+    // Continue Button
+    // ==============================
+    document.getElementById("continue-btn").addEventListener("click", function() {
       if (!selectedCourse) {
         alert("Please select a course before continuing.");
         return;
       }
+
       if (!selectedGroup) {
         alert("Please select your group before continuing.");
         return;
       }
-      // isScorekeeper is a boolean; both true/false are valid choices
-      // Only block if neither button was pressed (still default false BUT not chosen)
-      // If you want to force an explicit choice, uncomment the next 3 lines:
-      // if (!document.getElementById("yes-scorekeeper").classList.contains("selected")
-      //   && !document.getElementById("no-scorekeeper").classList.contains("selected")) {
-      //   return alert("Please choose whether you'll be keeping score.");
-      // }
 
+      if (isScorekeeper === null) {
+        alert("Please choose whether you'll be keeping score.");
+        return;
+      }
+
+      // Save user selection in localStorage for use in scorekeeping screen
       localStorage.setItem("selectedCourse", JSON.stringify(selectedCourse));
       localStorage.setItem("selectedGroup", selectedGroup);
-      localStorage.setItem("isScorekeeper", JSON.stringify(isScorekeeper));
+      localStorage.setItem("isScorekeeper", isScorekeeper);
 
+      // Redirect to scorekeeping page
       window.location.href = "fpg-tracker.html";
     });
 
-    // Kick off
+    // Initialize
     loadCourses();
   </script>
 </body>

@@ -803,12 +803,13 @@
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
 
-// ✅ JSONBin returns { record: [...] } or an array directly
+// ✅ Handle both structures: array OR wrapped object
 const raw = data.record || data;
 const courses = Array.isArray(raw) ? raw : [raw];
 
-    // ✅ JSONBin returns { record: [...] }
-    const courses = Array.isArray(data.record) ? data.record : [data.record];
+// ✅ Log to verify structure
+console.log("Loaded courses:", courses);
+
 
     // ===============================
     // 1️⃣ Populate the Course Dropdown
@@ -816,14 +817,15 @@ const courses = Array.isArray(raw) ? raw : [raw];
     const courseSelect = document.getElementById("courseSelect");
     courseSelect.innerHTML = '<option value="">Select a course</option>';
 
-    courses.forEach((course, index) => {
-      if (course.course_name) {
-        const opt = document.createElement("option");
-        opt.value = index; // store index instead of name for lookup later
-        opt.textContent = course.course_name;
-        courseSelect.appendChild(opt);
-      }
-    });
+courses.forEach((course, index) => {
+  if (course.course_name) {
+    const opt = document.createElement("option");
+    opt.value = index;
+    opt.textContent = course.course_name;
+    courseSelect.appendChild(opt);
+  }
+});
+
 
     // ===============================
     // 2️⃣ Handle Course Selection

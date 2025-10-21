@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FPG Scorekeeper - Start Screen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -17,14 +17,19 @@
   </style>
 </head>
 
-<body class="flex flex-col items-center justify-center min-h-screen">
+<body class="flex flex-col items-center min-h-screen">
+
+  <!-- Top Header Bar -->
+  <header class="w-full bg-gradient-to-r from-[#3c763d] to-[#2d5a2e] py-4 text-center text-white shadow">
+    <h1 class="text-xl font-bold tracking-wide">FPG — Florida Players Group</h1>
+  </header>
 
   <!-- Logo -->
-  <div class="mb-6">
+  <div class="mt-8 mb-6">
     <img 
       src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
       alt="FPG Logo"
-      class="w-36 mx-auto"
+      class="w-48 mx-auto"
     />
   </div>
 
@@ -51,10 +56,10 @@
   </div>
 
   <!-- Continue Button -->
-  <div class="mt-6 text-center">
+  <div class="mt-6 text-center mb-12">
     <button 
       id="continue-btn" 
-      class="py-2 px-6 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition"
+      class="py-2 px-6 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
     >
       Continue
     </button>
@@ -62,12 +67,13 @@
 
   <!-- Script -->
   <script>
+    // JSONBin URL containing your pairings
     const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
     let courses = [];
     let selectedCourse = null;
     let selectedGroup = null;
-    let isScorekeeper = null;
+    let isScorekeeper = false;
 
     // ==============================
     // Load Courses from JSONBin
@@ -77,7 +83,6 @@
         const res = await fetch(BIN_URL);
         const data = await res.json();
 
-        // Handle all JSONBin formats
         courses = (data.record?.[0]?.record) || (data[0]?.record) || data.record || data;
 
         const courseSelect = document.getElementById("course-select");
@@ -166,12 +171,12 @@
         return;
       }
 
-      // Save user selection in localStorage for use in scorekeeping screen
+      // Save selections
       localStorage.setItem("selectedCourse", JSON.stringify(selectedCourse));
       localStorage.setItem("selectedGroup", selectedGroup);
       localStorage.setItem("isScorekeeper", isScorekeeper);
 
-      // Redirect to scorekeeping page
+      // Redirect
       window.location.href = "fpg-tracker.html";
     });
 

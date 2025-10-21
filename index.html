@@ -59,8 +59,7 @@
     </button>
   </div>
 
-  <!-- Script -->
-    <script>
+   <script>
     const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
     let courses = [];
@@ -78,9 +77,6 @@
 
         // Handle all JSONBin formats
         courses = (data.record?.[0]?.record) || (data[0]?.record) || data.record || data;
-        console.log("Data received from JSONBin:", data);
-        console.log("Courses parsed:", courses);
-
 
         const courseSelect = document.getElementById("course-select");
         courseSelect.innerHTML = '<option value="">Select a course</option>';
@@ -152,6 +148,7 @@
     // Initialize
     loadCourses();
   </script>
+
 
 </body>
 </html>

@@ -585,15 +585,12 @@
 </div>
 
 <div class="input-group">
-        <label for="group-select">Select Your Foursome</label>
-        <select id="group-select">
-          <option value="">Choose your group...</option>
-          <option value="group1">Group 1 - 9:00 AM Tee Time</option>
-          <option value="group2">Group 2 - 9:10 AM Tee Time</option>
-          <option value="group3">Group 3 - 9:20 AM Tee Time</option>
-          <option value="group4">Group 4 - 9:30 AM Tee Time</option>
-        </select>
-      </div>
+  <label for="group-select">Select Your Foursome</label>
+  <select id="group-select">
+    <option value="">Choose your group...</option>
+  </select>
+</div>
+
 
       <div id="group-preview" class="hidden">
         <label style="display: block; font-weight: 600; color: #2d5a2e; margin-bottom: 0.5rem;">
@@ -876,26 +873,19 @@ courses.forEach((course, index) => {
         
         // ==================== SETUP ====================
         function populateGroupDropdown() {
-            const select = document.getElementById('group-select');
-            select.innerHTML = '';
-            select.disabled = false;
-            
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = 'Choose your group...';
-            select.appendChild(defaultOption);
+  const select = document.getElementById('group-select');
+  select.innerHTML = '<option value="">Choose your group...</option>';
 
-            // Add options from the dynamically loaded data
-            Object.keys(GROUPS_DATA).forEach(key => {
-                const group = GROUPS_DATA[key];
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = group.name;
-                select.appendChild(option);
-            });
-            // Also update the course name placeholder once loaded
-            document.querySelector('.course-header strong').textContent = COURSE_NAME;
-        }
+  // 🧩 Populate dynamically using tee_time + group_number from JSONBin
+  const course = Object.values(GROUPS_DATA);
+  course.forEach((group) => {
+    const option = document.createElement('option');
+    option.value = `group${group.group_number}`;
+    option.textContent = `Group ${group.group_number} - ${group.tee_time}`;
+    select.appendChild(option);
+  });
+}
+
 
         function setScorekeeper(value) {
             isScorekeeper = value;

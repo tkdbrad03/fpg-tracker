@@ -3,111 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FPG Group Scorekeeper</title>
+  <title>FPG Scorekeeper - Start Screen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* --- your existing CSS remains unchanged --- */
+    body {
+      background-color: #f9fafb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .btn {
+      @apply bg-fpg-green text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition;
+    }
+    .selected {
+      background-color: #3c763d !important;
+      color: #fff !important;
+    }
   </style>
 </head>
-<body>
-  <div class="header">
-  <div class="logo">
-    <img src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png" alt="Florida Players Group Logo" />
+<body class="flex flex-col items-center justify-center min-h-screen">
+
+  <!-- Logo -->
+  <div class="mb-6">
+    <img 
+      src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
+      alt="FPG Logo"
+      class="w-48 mx-auto"
+    />
   </div>
-  <h1>Florida Players Group</h1>
-  <p class="tagline">Good Golf • Good Friends • Good Times</p>
-</div>
 
-
-    <!-- Setup View -->
-    <div id="setup-view" class="view active">
-      <div class="content">
-        <div class="card">
-          <h2>Welcome! Let's Get Started</h2>
-
-          <div class="input-group">
-            <label for="player-name">Your Name</label>
-            <input type="text" id="player-name" placeholder="Enter your name">
-          </div>
-
-          <label style="display:block;font-weight:600;color:#2d5a2e;margin-bottom:0.5rem;">
-            Are you a scorekeeper today?
-          </label>
-          <div class="radio-group">
-            <div class="radio-option" onclick="setScorekeeper(true)">
-              <div style="font-size:2rem;margin-bottom:0.5rem;">✅</div>
-              <div>Yes</div>
-              <div style="font-size:0.75rem;color:#6c757d;">I'll keep score</div>
-            </div>
-            <div class="radio-option" onclick="setScorekeeper(false)">
-              <div style="font-size:2rem;margin-bottom:0.5rem;">⛳</div>
-              <div>No</div>
-              <div style="font-size:0.75rem;color:#6c757d;">Just playing</div>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="course-select">Select Course</label>
-            <select id="course-select">
-              <option value="">Choose your course...</option>
-            </select>
-          </div>
-
-          <div class="input-group">
-            <label for="group-select">Select Your Foursome</label>
-            <select id="group-select">
-              <option value="">Choose your group...</option>
-            </select>
-          </div>
-
-          <div id="group-preview" class="hidden">
-            <label style="display:block;font-weight:600;color:#2d5a2e;margin-bottom:0.5rem;">
-              Your Playing Partners:
-            </label>
-            <div class="player-list" id="group-members"></div>
-          </div>
-
-          <button class="btn btn-primary" onclick="startRound()" id="start-btn" disabled>
-            Start Round
-          </button>
-        </div>
-      </div>
+  <!-- Scorekeeper Choice -->
+  <div class="text-center mb-8">
+    <h2 class="text-xl font-bold mb-3 text-gray-800">Will you be keeping score today?</h2>
+    <div class="flex justify-center space-x-4">
+      <button id="yes-scorekeeper" class="py-2 px-5 bg-green-600 text-white rounded-md hover:bg-green-700">Yes, I’ll keep score</button>
+      <button id="no-scorekeeper" class="py-2 px-5 bg-gray-400 text-white rounded-md hover:bg-gray-500">No, just playing</button>
     </div>
-
-    <!-- Other views remain exactly as they were -->
   </div>
 
+  <!-- Dropdowns -->
+  <div class="w-full max-w-md bg-white shadow-md rounded-lg p-6">
+    <label for="course-select" class="block text-gray-700 font-semibold mb-2">Choose Course</label>
+    <select id="course-select" class="w-full border border-gray-300 rounded-md p-2 mb-4">
+      <option value="">Loading courses...</option>
+    </select>
+
+    <label for="group-select" class="block text-gray-700 font-semibold mb-2">Choose Group</label>
+    <select id="group-select" class="w-full border border-gray-300 rounded-md p-2">
+      <option value="">Select a course first</option>
+    </select>
+  </div>
+
+  <!-- Script -->
   <script>
-    // ====== LIVE JSONBIN CONNECTION ======
-    const BIN_URL = "https://api.jsonbin.io/v3/b/";
-    const BIN_ID = "68f6557dae596e708f1f69d1";  // ✅ your live bin
-    const BIN_KEY = "$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O";  // ✅ your live API key
+    const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
-    let GROUPS_DATA = [];
-    let currentCourse = '';
-    let selectedGroup = '';
+    let courses = [];
+    let selectedCourse = null;
+    let selectedGroup = null;
     let isScorekeeper = false;
-    let currentPlayer = '';
-    let groupScores = [];
-    let currentHole = 0;
-    let currentScoringPlayer = 0;
-    let keeperIndex = 0;
 
-    // ==================== LOAD COURSES FROM JSONBIN ====================
+    // Fetch courses from JSONBin
     async function loadCourses() {
       try {
-        const res = await fetch(`${BIN_URL}${BIN_ID}/latest`, {
-          headers: { "X-Master-Key": BIN_KEY }
-        });
+        const res = await fetch(BIN_URL);
         const data = await res.json();
-        GROUPS_DATA = data.record;
+        courses = data.record;
 
-        const courseSelect = document.getElementById('course-select');
-        courseSelect.innerHTML = '<option value="">Choose your course...</option>';
-
-        GROUPS_DATA.forEach(course => {
-          const opt = document.createElement('option');
-          opt.value = course.course_name;
-          opt.textContent = course.course_name;
+        const courseSelect = document.getElementById("course-select");
+        courseSelect.innerHTML = '<option value="">Select a course</option>';
+        courses.forEach((c, index) => {
+          const opt = document.createElement("option");
+          opt.value = index;
+          opt.textContent = c.course_name;
           courseSelect.appendChild(opt);
         });
       } catch (err) {
@@ -115,83 +81,56 @@
       }
     }
 
-    loadCourses();
+    // When a course is selected
+    document.getElementById("course-select").addEventListener("change", function() {
+      const index = this.value;
+      const groupSelect = document.getElementById("group-select");
+      groupSelect.innerHTML = "";
 
-    // ==================== EVENT LISTENERS ====================
-    document.getElementById('course-select').addEventListener('change', (e) => {
-      currentCourse = e.target.value;
-      populateGroupDropdown(currentCourse);
-    });
-
-    document.getElementById('group-select').addEventListener('change', (e) => {
-      const groupIndex = parseInt(e.target.value);
-      const course = GROUPS_DATA.find(c => c.course_name === currentCourse);
-      if (course && course.groups[groupIndex]) {
-        selectedGroup = course.groups[groupIndex];
-        showGroupPreview(selectedGroup);
+      if (index === "") {
+        groupSelect.innerHTML = '<option value="">Select a course first</option>';
+        return;
       }
-      updateStartButton();
+
+      selectedCourse = courses[index];
+      const groups = selectedCourse.groups || [];
+      if (groups.length === 0) {
+        groupSelect.innerHTML = '<option value="">No groups found</option>';
+        return;
+      }
+
+      groupSelect.innerHTML = '<option value="">Select a group</option>';
+      groups.forEach((g, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = `Group ${g.group_number} - ${g.tee_time}`;
+        groupSelect.appendChild(opt);
+      });
     });
 
-    document.getElementById('player-name').addEventListener('input', updateStartButton);
+    // Group selection
+    document.getElementById("group-select").addEventListener("change", function() {
+      const val = this.value;
+      selectedGroup = val !== "" ? val : null;
+      console.log("Selected group:", selectedGroup);
+    });
 
-    function updateStartButton() {
-      const name = document.getElementById('player-name').value.trim();
-      const hasGroup = selectedGroup && selectedGroup.players;
-      document.getElementById('start-btn').disabled = !(name && hasGroup);
-    }
+    // Scorekeeper toggle
+    document.getElementById("yes-scorekeeper").addEventListener("click", function() {
+      isScorekeeper = true;
+      this.classList.add("selected");
+      document.getElementById("no-scorekeeper").classList.remove("selected");
+      console.log("User is scorekeeper");
+    });
 
-    // ==================== POPULATE GROUP DROPDOWN ====================
-    function populateGroupDropdown(selectedCourseName) {
-      const select = document.getElementById('group-select');
-      select.innerHTML = '<option value="">Choose your group...</option>';
+    document.getElementById("no-scorekeeper").addEventListener("click", function() {
+      isScorekeeper = false;
+      this.classList.add("selected");
+      document.getElementById("yes-scorekeeper").classList.remove("selected");
+      console.log("User is not scorekeeper");
+    });
 
-      const course = GROUPS_DATA.find(c => c.course_name === selectedCourseName);
-      if (!course || !course.groups) return;
-
-      course.groups.forEach((group, index) => {
-        const opt = document.createElement('option');
-        opt.value = index;
-        opt.textContent = `Group ${group.group_number} - ${group.tee_time}`;
-        select.appendChild(opt);
-      });
-    }
-
-    // ==================== SHOW GROUP PREVIEW ====================
-    function showGroupPreview(group) {
-      const preview = document.getElementById('group-preview');
-      const membersList = document.getElementById('group-members');
-      membersList.innerHTML = '';
-
-      group.players.forEach(player => {
-        const div = document.createElement('div');
-        div.className = 'player-item';
-        div.innerHTML = `
-          <div class="player-icon">${player.name.charAt(0)}</div>
-          <div class="player-info">
-            <div class="player-name">${player.name}</div>
-            <div class="player-role">Player</div>
-          </div>`;
-        membersList.appendChild(div);
-      });
-
-      preview.classList.remove('hidden');
-    }
-
-    function setScorekeeper(value) {
-      isScorekeeper = value;
-      document.querySelectorAll('.radio-option').forEach((el, i) => {
-        el.classList.toggle('selected', i === (value ? 0 : 1));
-      });
-      updateStartButton();
-    }
-
-    // ==================== START ROUND ====================
-    function startRound() {
-      currentPlayer = document.getElementById('player-name').value.trim();
-      const group = selectedGroup;
-      alert(`Starting round for ${currentPlayer} in ${currentCourse}, ${group.tee_time}`);
-    }
+    loadCourses();
   </script>
 </body>
 </html>

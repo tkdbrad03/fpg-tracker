@@ -83,7 +83,7 @@
         const res = await fetch(BIN_URL);
         const data = await res.json();
 
-        courses = data[0]?.record || [];
+        courses = (data.record?.[0]?.record) || (data[0]?.record) || data.record || data;
 
         const courseSelect = document.getElementById("course-select");
         courseSelect.innerHTML = '<option value="">Select a course</option>';

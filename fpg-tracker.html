@@ -2,680 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-  <title>FPG Group Scorekeeper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FPG Scorekeeper</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{
-      --fpg-green:#3c763d;
-      --fpg-green-dark:#2d5a2e;
-      --fpg-gold:#e6b800;
-      --text:#1f2937;
-      --muted:#6b7280;
-      --bg:#f8f9fa;
-      --card:#ffffff;
-      --line:#e5e7eb;
+    body {
+      background-color: #f9fafb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,system-ui,Arial,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
-    .wrap{
-      max-width:480px;
-      margin:0 auto;
-      min-height:100vh;
-      background:var(--card);
-      display:flex;
-      flex-direction:column;
-    }
-    /* Header */
-    .header{
-      background:linear-gradient(135deg,var(--fpg-green) 0%,var(--fpg-green-dark) 100%);
-      color:#fff;
-      padding:16px 16px 8px;
-      position:sticky; top:0; z-index:5;
-    }
-    .logo{
-      width:84px; height:84px; margin:4px auto 8px; display:flex; align-items:center; justify-content:center;
-      border-radius:12px; background:rgba(255,255,255,0.06);
-    }
-    .logo img{max-width:100%; max-height:100%; object-fit:contain}
-    .hdr-title{margin:0; font-weight:800; font-size:20px; text-align:center}
-    .hdr-tag{margin:4px 0 0; text-align:center; color:var(--fpg-gold); font-weight:600; font-size:12px}
-    .hdr-meta{
-      margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px
-    }
-    .pill{background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); padding:6px 10px; border-radius:999px}
-    .keepers{opacity:.95}
-    .keepers strong{font-weight:800}
-    /* Tabs */
-    .tabs{display:flex; border-bottom:1px solid var(--line)}
-    .tab{
-      flex:1; text-align:center; padding:10px 6px; font-weight:700; font-size:13px; color:var(--muted); background:#fff; border:none; cursor:pointer
-    }
-    .tab.active{color:var(--fpg-green); background:#d4edda}
-    .content{padding:14px}
-    .view{display:none; animation:.18s ease-out fade}
-    .view.active{display:block}
-    @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
-    /* Hole header */
-    .course-head{
-      background:linear-gradient(135deg,var(--fpg-green) 0%,var(--fpg-green-dark) 100%);
-      color:#fff; border-radius:12px; padding:12px; margin-bottom:12px
-    }
-    .course-row{display:flex; justify-content:space-between; align-items:center; gap:10px}
-    .hole-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px; font-size:12px}
-    .hg-cell{text-align:center; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:6px}
-    .hg-title{opacity:.85; font-size:11px}
-    .hg-val{font-weight:800; font-size:16px}
-    .nav-row{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0 6px}
-    .btn{padding:10px; border-radius:10px; border:2px solid var(--fpg-green); font-weight:800; cursor:pointer; background:#fff; color:var(--fpg-green)}
-    .btn.primary{background:var(--fpg-green); color:#fff}
-    .btn:disabled{opacity:.5; cursor:not-allowed}
-    /* Players grid */
-    .players{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    .player{
-      border:1px solid var(--line); border-radius:12px; padding:10px; background:#fff
-    }
-    .p-top{display:flex; align-items:center; gap:8px; margin-bottom:8px}
-    .avatar{
-      width:34px; height:34px; border-radius:50%; background:var(--fpg-green); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800
-    }
-    .p-name{font-weight:800; font-size:14px; display:flex; align-items:center; gap:6px}
-    .stroke-dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--fpg-green)}
-    .subline{font-size:11px; color:var(--muted); margin-top:2px; display:flex; gap:10px; align-items:center}
-    .quota{display:flex; align-items:center; gap:4px}
-    .check{font-size:12px; color:var(--fpg-green); display:none}
-    .check.on{display:inline}
-    /* score buttons */
-    .score-row{display:grid; grid-template-columns:repeat(5,1fr); gap:6px}
-    .score-btn{
-      border:1px solid var(--line); border-radius:8px; padding:8px 0; background:#f3f4f6; font-weight:800; color:#374151; cursor:pointer; text-align:center
-    }
-    .score-btn.active{background:var(--fpg-green); color:#fff; border-color:var(--fpg-green)}
-    .pts{margin-top:6px; font-size:12px; font-weight:700; color:var(--fpg-green)}
-    /* Card */
-    table{width:100%; border-collapse:collapse; font-size:12px}
-    th,td{padding:8px 6px; border-bottom:1px solid var(--line); text-align:center}
-    thead th{position:sticky; top:0; background:#d4edda; z-index:1}
-    /* Alerts */
-    .alert{border-radius:10px; padding:10px; font-size:12px; margin:8px 0}
-    .alert.info{background:#d1ecf1; color:#0c5460; border:1px solid #9bd5e1}
-    .alert.warn{background:#fff3cd; color:#856404; border:1px solid #ffe08a}
-    /* Footer spacer */
-    .spacer{height:16px}
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <!-- Header -->
-    <div class="header">
-      <div class="logo">
-        <img src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png" alt="FPG Logo" />
-      </div>
-      <h1 class="hdr-title">Florida Players Group</h1>
-      <div class="hdr-tag">Good Golf • Good Friends • Good Times</div>
-      <div class="hdr-meta">
-        <div class="pill" id="meta-course">Course</div>
-        <div class="pill" id="meta-group">Group</div>
-        <div class="pill keepers" id="meta-keepers">K1 & K2</div>
-      </div>
-    </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab active" data-tab="play">Play</button>
-      <button class="tab" data-tab="card">Card</button>
-      <button class="tab" data-tab="live">Live</button>
-    </div>
+<body class="min-h-screen flex flex-col items-center justify-start p-6">
 
-    <!-- Views -->
-    <div class="content">
-      <!-- PLAY -->
-      <div id="view-play" class="view active">
-        <div class="course-head">
-          <div class="course-row">
-            <div id="course-name" style="font-weight:800">Course</div>
-            <div id="group-name" style="opacity:.9"></div>
-          </div>
-          <div class="hole-grid">
-            <div class="hg-cell">
-              <div class="hg-title">Hole</div>
-              <div class="hg-val" id="hole-num">1</div>
-            </div>
-            <div class="hg-cell">
-              <div class="hg-title">Par</div>
-              <div class="hg-val" id="hole-par">4</div>
-            </div>
-            <div class="hg-cell">
-              <div class="hg-title">HCP</div>
-              <div class="hg-val" id="hole-hcp">11</div>
-            </div>
-          </div>
-          <div class="nav-row">
-            <button class="btn" id="btn-prev">← Previous</button>
-            <button class="btn primary" id="btn-next">Next →</button>
-          </div>
-          <div id="verify-banner" class="alert info" style="display:none"></div>
-        </div>
+  <!-- Header -->
+  <header class="w-full max-w-2xl bg-white shadow-md rounded-lg p-6 mt-4 text-center">
+    <h1 id="courseNameDisplay" class="text-2xl font-bold text-gray-800"></h1>
+    <p class="text-gray-600 mt-1">
+      <span id="groupInfoDisplay"></span> • 
+      <span id="roleDisplay"></span>
+    </p>
+  </header>
 
-        <div class="players" id="players-grid">
-          <!-- Filled by JS -->
-        </div>
-        <div class="spacer"></div>
-      </div>
+  <!-- Player List -->
+  <main class="w-full max-w-2xl bg-white shadow-md rounded-lg p-6 mt-6">
+    <h2 class="text-lg font-semibold text-gray-700 mb-4 text-center">Group Players</h2>
+    <div id="playerList" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center"></div>
+  </main>
 
-      <!-- CARD -->
-      <div id="view-card" class="view">
-        <div class="alert info">Stableford points are computed from <strong>NET</strong> score (handicap stroke applied on the hole when eligible).</div>
-        <div style="overflow:auto">
-          <table id="card-table"></table>
-        </div>
-      </div>
-
-      <!-- LIVE -->
-      <div id="view-live" class="view">
-        <div class="alert info">Group live view (local for now). Shared cloud board can be hooked to your central Bin/Sheet when you’re ready.</div>
-        <div id="live-board"></div>
-      </div>
-    </div>
-  </div>
-
+  <!-- Script -->
   <script>
-    /***************
-     * CONFIG
-     ***************/
-    const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
-    // If you want to write to the bin, add your master key; if left blank, writing is skipped.
-    const JSONBIN_API_KEY = ""; // e.g. "$2a$10$......"
-    const SHEET_ID = "152dK2m3gluxCdBal9GGLs43aDKFBvy5BiHdnKL3gV4o";
-    const SHEET_TAB_NAME = "Player Quotas"; // readable
-    const SHEET_GVIZ_URL =
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}`;
+    // ==============================
+    // Load user selections from localStorage
+    // ==============================
+    const selectedCourse = JSON.parse(localStorage.getItem("selectedCourse"));
+    const selectedGroupIndex = localStorage.getItem("selectedGroup");
+    const isScorekeeper = JSON.parse(localStorage.getItem("isScorekeeper"));
 
-    // Stableford (net): +2 or more:0, +1:1, 0:2, -1:3, -2 or better:4
-    function stablefordPoints(gross, par, strokeApplied){
-      if(!gross || !par) return 0;
-      const net = gross - (strokeApplied ? 1 : 0);
-      const diff = net - par;
-      if(diff >= 2) return 0;       // double bogey or higher
-      if(diff === 1) return 1;      // bogey
-      if(diff === 0) return 2;      // par
-      if(diff === -1) return 3;     // birdie
-      return 4;                     // eagle or better
+    // Safety check
+    if (!selectedCourse || selectedGroupIndex === null) {
+      alert("Missing setup info. Please go back to the start screen.");
+      window.location.href = "index.html";
     }
 
-    /***************
-     * STATE
-     ***************/
-    let selectedCourse = null;   // object (from index)
-    let selectedGroupIndex = null;
-    let isScorekeeper = false;
+    const currentGroup = selectedCourse.groups[selectedGroupIndex];
 
-    let courseHoles = [];        // [{par,hcp}, ...]
-    let players = [];            // [{name, id?, handicap, quota, strokesGiven, pointsTotal, quotaReached}, ...]
-    let scorekeepers = [];       // [name1, name2]
-    let groupNumber = null;
+    // ==============================
+    // Populate Header Info
+    // ==============================
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("courseNameDisplay").textContent = selectedCourse.course_name;
+      document.getElementById("groupInfoDisplay").textContent = `Group ${currentGroup.group_number} - ${currentGroup.tee_time}`;
+      document.getElementById("roleDisplay").textContent = isScorekeeper ? "Scorekeeper" : "Player";
 
-    let currentHole = 1;         // 1..18
-    const maxHoles = 18;
-
-    // Scores cached locally for quick UI + Live tab (and also saved to JSONBin if key provided)
-    // structure: scores[playerName][hole] = { gross, pts, strokeApplied, byKeeper: { "Keeper 1": gross | null, "Keeper 2": gross | null } }
-    const scores = {};
-
-    /***************
-     * BOOTSTRAP
-     ***************/
-    (function initFromIndex(){
-      try{
-        const sc = localStorage.getItem("selectedCourse");
-        const sg = localStorage.getItem("selectedGroup");
-        const isk = localStorage.getItem("isScorekeeper");
-        if(!sc || sg===null){
-          alert("Missing setup info. Please start from the index page.");
-          location.href = "index.html";
-          return;
-        }
-        selectedCourse = JSON.parse(sc);
-        selectedGroupIndex = parseInt(sg,10);
-        isScorekeeper = JSON.parse(isk || "false");
-      }catch(e){
-        alert("Unable to read selections. Returning to start.");
-        location.href = "index.html";
-        return;
-      }
-    })();
-
-    // UI handles
-    const elCourseName  = document.getElementById("course-name");
-    const elGroupName   = document.getElementById("group-name");
-    const elHoleNum     = document.getElementById("hole-num");
-    const elHolePar     = document.getElementById("hole-par");
-    const elHoleHcp     = document.getElementById("hole-hcp");
-    const elPlayersGrid = document.getElementById("players-grid");
-    const elVerifyBanner= document.getElementById("verify-banner");
-    const elCardTable   = document.getElementById("card-table");
-    const elLiveBoard   = document.getElementById("live-board");
-
-    const metaCourse = document.getElementById("meta-course");
-    const metaGroup  = document.getElementById("meta-group");
-    const metaKeepers= document.getElementById("meta-keepers");
-
-    // Tab switching
-    document.querySelectorAll(".tab").forEach(btn=>{
-      btn.addEventListener("click",()=>{
-        document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-        btn.classList.add("active");
-        const tab = btn.dataset.tab;
-        document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-        document.getElementById(`view-${tab}`).classList.add("active");
-        if(tab==="card") renderCard();
-        if(tab==="live") renderLive();
-      });
+      loadPlayerHandicaps();
     });
 
-    // Nav buttons
-    document.getElementById("btn-prev").addEventListener("click", ()=> changeHole(-1));
-    document.getElementById("btn-next").addEventListener("click", ()=> changeHole(1));
+    // ==============================
+    // Load Handicaps from Google Sheet
+    // ==============================
+    const SHEET_ID = "152dK2m3gluxCdBal9GGLs43aDKFBvy5BiHdnKL3gV4o";
+    const SHEET_NAME = "Player Quotas";
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-    function changeHole(d){
-      const next = currentHole + d;
-      if(next<1 || next>maxHoles) return;
-      currentHole = next;
-      updateHoleHeader();
-      renderPlayers();
-    }
+    async function loadPlayerHandicaps() {
+      try {
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
 
-    /***************
-     * LOAD COURSE + HOLES
-     ***************/
-    async function loadCourseMeta(){
-      // course name
-      elCourseName.textContent = selectedCourse.course_name || "Course";
-      metaCourse.textContent = selectedCourse.course_name || "Course";
+        const rows = json.table.rows.map(r => ({
+          name: r.c[0]?.v || "",
+          handicap: r.c[1]?.v || ""
+        }));
 
-      // group
-      const g = selectedCourse.groups[selectedGroupIndex];
-      groupNumber = g.group_number;
-      elGroupName.textContent = `Group ${g.group_number} — ${g.tee_time}`;
-      metaGroup.textContent   = `G${g.group_number} ${g.tee_time}`;
-
-      // keepers
-      scorekeepers = [g.scorekeeper1 || "", g.scorekeeper2 || ""].filter(Boolean);
-      const k1short = shortName(scorekeepers[0]||"");
-      const k2short = shortName(scorekeepers[1]||"");
-      metaKeepers.innerHTML = `<strong>1:</strong> ${k1short || "-"} &nbsp; <strong>2:</strong> ${k2short || "-"}`;
-
-      // holes (par + hcp) — we’ll try from the same BIN payload shape you pasted earlier
-      // If the selectedCourse already has course_holes, use it; otherwise fetch supplemental map.
-      if(Array.isArray(selectedCourse.course_holes) && selectedCourse.course_holes.length===18){
-        courseHoles = selectedCourse.course_holes;
-      }else{
-        // fallback: fetch a course-hole map structure kept alongside
-        const map = await fetchCourseHoleMap();
-        courseHoles = (map[selectedCourse.course_name] || []).slice(0,18);
-      }
-
-      updateHoleHeader();
-
-      // players list names first
-      players = g.players.map(p=>({ name:p.name || p, handicap:null, quota:null, strokesGiven:0, pointsTotal:0, quotaReached:false }));
-      players.forEach(p=>{ scores[p.name]={}; });
-
-      // then hydrate handicap + quota (sheet)
-      await hydrateHandicapAndQuota(players);
-
-      // compute strokesGiven (cap 18)
-      players.forEach(p=>{
-        const h = typeof p.handicap==="number" ? p.handicap : parseInt(p.handicap||"0",10);
-        p.strokesGiven = Math.max(0, Math.min(18, isFinite(h)? h : 0));
-      });
-
-      renderPlayers();
-    }
-
-    function updateHoleHeader(){
-      const idx = currentHole-1;
-      const hole = courseHoles[idx] || {};
-      elHoleNum.textContent = currentHole;
-      elHolePar.textContent = hole.par ?? "?";
-      elHoleHcp.textContent = hole.hcp ?? "?";
-
-      // show verification info only on 9 and 18
-      if(currentHole===9 || currentHole===18){
-        elVerifyBanner.style.display = "block";
-        const which = currentHole===9 ? "Front 9" : "Back 9";
-        elVerifyBanner.innerHTML = `<strong>${which} verification:</strong> both K1 & K2 enter scores. The system will mark any mismatches so you can reconcile.`;
-      }else{
-        elVerifyBanner.style.display = "none";
+        renderPlayers(rows);
+      } catch (err) {
+        console.error("Error loading player handicaps:", err);
+        renderPlayers(); // fallback
       }
     }
 
-    function shortName(full){
-      if(!full) return "";
-      // show first token only (handles “Ray 'Sting Ray' Elmore” nicely enough for a badge)
-      return (full.split(" ")[0]||"").replace(/['"]/g,"");
-    }
+    // ==============================
+    // Render Player List
+    // ==============================
+    function renderPlayers(handicapData = []) {
+      const playerList = document.getElementById("playerList");
+      playerList.innerHTML = "";
 
-    async function fetchCourseHoleMap(){
-      // We’ll try to read the same BIN and look for a top-level { courses: { "Course Name":[{par,hcp},..] } }
-      try{
-        const res = await fetch(BIN_URL);
-        const raw = await res.json();
-        const payload = (raw.record?.[0]) || (raw[0]) || raw.record || raw;
-        if(payload && payload.courses) return payload.courses;
-      }catch(e){}
-      return {}; // fallback
-    }
+      currentGroup.players.forEach(p => {
+        const match = handicapData.find(h => h.name.trim().toLowerCase() === p.name.trim().toLowerCase());
+        const handicap = match ? match.handicap : "—";
 
-    /***************
-     * HANDICAP & QUOTA (Google Sheet)
-     ***************/
-    async function hydrateHandicapAndQuota(list){
-      try{
-        const res = await fetch(SHEET_GVIZ_URL);
-        const txt = await res.text();
-        // gviz returns: /*O_o*/\ngoogle.visualization.Query.setResponse({...})
-        const json = JSON.parse(txt.substring(txt.indexOf("{"), txt.lastIndexOf("}")+1));
-        const rows = json.table?.rows || [];
-        // Expecting columns like: Name | Handicap | Quota  (order can be adjusted below)
-        const NAME_COL = 0, HCP_COL = 1, QUOTA_COL = 2;
-        const map = {};
-        rows.forEach(r=>{
-          const c=r.c||[];
-          const name = (c[NAME_COL]?.v||"").toString().trim();
-          const hcp  = Number(c[HCP_COL]?.v ?? 0);
-          const quo  = Number(c[QUOTA_COL]?.v ?? 0);
-          if(name) map[name.toLowerCase()] = {handicap:hcp, quota:quo};
-        });
-        list.forEach(p=>{
-          const m = map[p.name.toLowerCase()];
-          if(m){
-            p.handicap = m.handicap;
-            p.quota    = m.quota;
-          }else{
-            // leave nulls; UI will handle
-          }
-        });
-      }catch(e){
-        // fallback mini-cache so UI still renders
-        const fallback = {}; // { "First Last":{handicap:12, quota:30}, ... }
-        list.forEach(p=>{
-          if(fallback[p.name]){
-            p.handicap=fallback[p.name].handicap; p.quota=fallback[p.name].quota;
-          }
-        });
-      }
-    }
-
-    /***************
-     * RENDER: PLAY
-     ***************/
-    function renderPlayers(){
-      elPlayersGrid.innerHTML = "";
-      const idx = currentHole-1;
-      const hole = courseHoles[idx] || {};
-      const hcpThisHole = hole.hcp;
-
-      players.forEach((p,i)=>{
-        const firstInitial = (p.name[0]||"").toUpperCase();
-
-        // stroke applies if the hole's stroke index <= strokesGiven
-        const strokeApplies = typeof hcpThisHole==="number" && p.strokesGiven>0 && hcpThisHole <= p.strokesGiven;
-
-        // score row (1..10)
-        const rowId = `scores-${i}`;
-        const ptsId = `pts-${i}`;
-        const htmlButtons = Array.from({length:10},(_,n)=>{
-          const val = n+1;
-          // is active?
-          const prev = scores[p.name]?.[currentHole]?.gross || null;
-          const active = prev===val ? "active" : "";
-          return `<button class="score-btn ${active}" data-player="${i}" data-score="${val}">${val}</button>`;
-        }).join("");
-
-        const handicapSmall = (p.handicap ?? "—");
-        const quotaSmall = (p.quota ?? "—");
-
-        const quotaHit = Number.isFinite(p.quota) && Number(p.pointsTotal)>=Number(p.quota);
-
-        const card = document.createElement("div");
-        card.className = "player";
-        card.innerHTML = `
-          <div class="p-top">
-            <div class="avatar">${firstInitial}</div>
-            <div style="flex:1">
-              <div class="p-name">
-                <span>${p.name}</span>
-                ${strokeApplies ? `<span class="stroke-dot" title="Stroke on this hole"></span>` : ``}
-              </div>
-              <div class="subline">
-                <span>HCP: ${handicapSmall}</span>
-                <span class="quota">Quota: <strong id="qv-${i}">${quotaSmall}</strong> <span class="check ${quotaHit?'on':''}" id="qc-${i}">✅</span></span>
-              </div>
-            </div>
-          </div>
-          <div class="score-row" id="${rowId}">
-            ${htmlButtons}
-          </div>
-          <div class="pts" id="${ptsId}"></div>
+        const playerCard = document.createElement("div");
+        playerCard.className = "bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm";
+        playerCard.innerHTML = `
+          <p class="font-semibold text-gray-800">${p.name}</p>
+          <p class="text-sm text-gray-500">Handicap: ${handicap}</p>
         `;
-        elPlayersGrid.appendChild(card);
-      });
-
-      // wire events
-      elPlayersGrid.querySelectorAll(".score-btn").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const pIdx = parseInt(btn.dataset.player,10);
-          const gross= parseInt(btn.dataset.score,10);
-          setPlayerScore(pIdx, gross);
-          // activate visual
-          const row = btn.parentElement;
-          row.querySelectorAll(".score-btn").forEach(b=>b.classList.remove("active"));
-          btn.classList.add("active");
-        });
-      });
-
-      // refresh points display (if any already saved)
-      players.forEach((p,i)=>{
-        const entry = scores[p.name]?.[currentHole];
-        if(entry){
-          document.getElementById(`pts-${i}`).textContent = `${entry.pts} ${entry.pts===1?'pt':'pts'}`;
-        }else{
-          document.getElementById(`pts-${i}`).textContent = ``;
-        }
-        // refresh quota check
-        const quotaHit = Number.isFinite(p.quota) && Number(p.pointsTotal)>=Number(p.quota);
-        const qc = document.getElementById(`qc-${i}`);
-        if(qc) qc.classList.toggle("on", !!quotaHit);
+        playerList.appendChild(playerCard);
       });
     }
-
-    async function setPlayerScore(playerIndex, grossScore){
-      const p = players[playerIndex];
-      const idx = currentHole-1;
-      const hole = courseHoles[idx] || {};
-      const strokeApplies = typeof hole.hcp==="number" && p.strokesGiven>0 && hole.hcp <= p.strokesGiven;
-
-      const pts = stablefordPoints(grossScore, hole.par, strokeApplies);
-
-      if(!scores[p.name]) scores[p.name]={};
-      if(!scores[p.name][currentHole]){
-        scores[p.name][currentHole] = {gross:null, pts:0, strokeApplied:false, byKeeper:{"Keeper 1":null,"Keeper 2":null}};
-      }
-      scores[p.name][currentHole].gross = grossScore;
-      scores[p.name][currentHole].pts   = pts;
-      scores[p.name][currentHole].strokeApplied = !!strokeApplies;
-
-      // recompute points total for quota check
-      p.pointsTotal = Object.values(scores[p.name]).reduce((sum,h)=>sum+(h?.pts||0),0);
-
-      // show points immediately
-      const ptsEl = document.getElementById(`pts-${playerIndex}`);
-      if(ptsEl) ptsEl.textContent = `${pts} ${pts===1?'pt':'pts'}`;
-
-      // refresh quota checkmark
-      const quotaHit = Number.isFinite(p.quota) && Number(p.pointsTotal)>=Number(p.quota);
-      const qc = document.getElementById(`qc-${playerIndex}`);
-      if(qc) qc.classList.toggle("on", !!quotaHit);
-
-      // persist (local for Live view)
-      persistLocal();
-
-      // save to JSONBin if key present (keepers logic)
-      await saveToBinPerKeeper(p.name, grossScore);
-    }
-
-    function persistLocal(){
-      const key = localStorageKeyForToday();
-      const payload = {
-        course: selectedCourse.course_name,
-        group: groupNumber,
-        hole: currentHole,
-        players: players.map(p=>({
-          name:p.name, handicap:p.handicap, quota:p.quota, pointsTotal:p.pointsTotal
-        })),
-        scores
-      };
-      localStorage.setItem(key, JSON.stringify(payload));
-    }
-
-    function localStorageKeyForToday(){
-      const d = new Date(); const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
-      return `fpg_live_${y}-${m}-${day}_g${groupNumber}`;
-    }
-
-    async function saveToBinPerKeeper(playerName, grossScore){
-      if(!JSONBIN_API_KEY){ return; } // skip writing if no key supplied
-
-      const groupKey = `group${groupNumber}`;
-      const holeKey  = `hole${currentHole}`;
-      const keeperName = isScorekeeper ? resolveKeeperLabelForMe(playerName) : "Keeper 1"; // best effort
-
-      try{
-        // 1) read
-        const r = await fetch(BIN_URL, { headers:{ 'X-Master-Key': JSONBIN_API_KEY }});
-        const data = await r.json();
-        let record = (Array.isArray(data.record) ? data.record[0] : data.record) || data;
-        if(!record.scores) record.scores = {};
-        if(!record.scores[groupKey]) record.scores[groupKey] = {};
-        if(!record.scores[groupKey][holeKey]) record.scores[groupKey][holeKey] = {};
-        if(!record.scores[groupKey][holeKey][playerName]) record.scores[groupKey][holeKey][playerName] = {};
-
-        record.scores[groupKey][holeKey][playerName][keeperName] = {
-          score: grossScore,
-          updatedAt: new Date().toISOString()
-        };
-
-        // 2) write
-        await fetch(BIN_URL.replace("/latest",""), {
-          method:"PUT",
-          headers:{
-            "Content-Type":"application/json",
-            "X-Master-Key": JSONBIN_API_KEY
-          },
-          body: JSON.stringify([record])
-        });
-      }catch(e){
-        console.log("JSONBin write skipped/failed:", e);
-      }
-    }
-
-    function resolveKeeperLabelForMe(){
-      // If device is for one of the two keepers, decide if they’re keeper 1 or 2 by name match (first token)
-      const meGuess = (localStorage.getItem("player-name")||"").trim().toLowerCase();
-      const k1 = (scorekeepers[0]||"").toLowerCase();
-      const k2 = (scorekeepers[1]||"").toLowerCase();
-      if(meGuess && k1 && k1.includes(meGuess.split(" ")[0])) return "Keeper 1";
-      if(meGuess && k2 && k2.includes(meGuess.split(" ")[0])) return "Keeper 2";
-      // fallback to chosen role: if isScorekeeper true and we can’t tell, alternate to "Keeper 1"
-      return "Keeper 1";
-    }
-
-    /***************
-     * CARD VIEW
-     ***************/
-    function renderCard(){
-      const headers = [`<th>Hole</th><th>Par</th>`]
-        .concat(players.map(p=>`<th>${sanitizeShort(p.name)}</th>`))
-        .join("");
-
-      const rows = [];
-      for(let h=1; h<=18; h++){
-        const idx = h-1;
-        const hole = courseHoles[idx]||{};
-        const tds = [`<td><strong>${h}</strong></td>`,`<td>${hole.par ?? "-"}</td>`];
-
-        players.forEach(p=>{
-          const entry = scores[p.name]?.[h];
-          const val = entry?.gross ?? "";
-          const badge = entry?.pts!=null ? ` <span style="font-size:11px;color:var(--fpg-green);font-weight:800">(${entry.pts})</span>` : "";
-          const dot = entry?.strokeApplied ? ` <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--fpg-green)" title="Stroke on this hole"></span>` : "";
-          tds.push(`<td>${val}${badge}${dot}</td>`);
-        });
-        rows.push(`<tr>${tds.join("")}</tr>`);
-      }
-
-      const foot = (() => {
-        const sums = players.map(p=>{
-          let pts = 0, gross=0;
-          for(let h=1; h<=18; h++){ const e=scores[p.name]?.[h]; if(e){ pts+=e.pts||0; gross+=e.gross||0; } }
-          return {pts,gross};
-        });
-        const tds = [`<td colspan="2" style="text-align:right;font-weight:800">Totals</td>`]
-          .concat(sums.map(s=>`<td><strong>${s.gross||0}</strong> <span style="color:var(--fpg-green)">${s.pts||0} pts</span></td>`));
-        return `<tr>${tds.join("")}</tr>`;
-      })();
-
-      elCardTable.innerHTML = `<thead><tr>${headers}</tr></thead><tbody>${rows.join("")}${foot}</tbody>`;
-    }
-
-    function sanitizeShort(name){
-      const first = (name||"").split(" ")[0] || "";
-      return first.replace(/['"]/g,"");
-    }
-
-    /***************
-     * LIVE VIEW (local only)
-     ***************/
-    function renderLive(){
-      const key = localStorageKeyForToday();
-      const data = JSON.parse(localStorage.getItem(key) || "{}");
-      if(!data || !data.players){ elLiveBoard.innerHTML = `<div class="alert warn">No local entries yet.</div>`; return; }
-
-      const sorted = [...data.players].sort((a,b)=> (b.pointsTotal||0) - (a.pointsTotal||0) );
-      elLiveBoard.innerHTML = sorted.map((p,i)=>`
-        <div style="display:flex;align-items:center;gap:8px;border-left:4px solid ${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'#d4edda'};background:#f8f9fa;border-radius:8px;padding:10px;margin:8px 0">
-          <div style="font-weight:800;width:28px;text-align:center;color:var(--fpg-green)">${i+1}</div>
-          <div style="flex:1">
-            <div style="font-weight:800">${p.name}</div>
-            <div style="font-size:12px;color:var(--muted)">Points: ${p.pointsTotal ?? 0} • HCP: ${p.handicap ?? "—"} • Quota: ${p.quota ?? "—"}</div>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    /***************
-     * INIT
-     ***************/
-    // Header meta (top bar)
-    document.getElementById("meta-course").textContent = selectedCourse.course_name || "Course";
-    (async function start(){
-      // Top meta extras:
-      const g = selectedCourse.groups[selectedGroupIndex];
-      document.getElementById("meta-group").textContent = `G${g.group_number} ${g.tee_time}`;
-      const k1short = shortName(g.scorekeeper1||"");
-      const k2short = shortName(g.scorekeeper2||"");
-      document.getElementById("meta-keepers").innerHTML = `<strong>1:</strong> ${k1short || "-"} &nbsp; <strong>2:</strong> ${k2short || "-"}`;
-
-      await loadCourseMeta();
-    })();
   </script>
 </body>
 </html>

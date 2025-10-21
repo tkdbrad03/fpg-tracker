@@ -794,64 +794,77 @@
         let liveRefreshInterval = null;
 
         // ==================== DATA LOADING (DYNAMIC) ====================
-        async function loadData() {
-            try {
-                const url = `https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest`;
-                const headers = { 'X-Bin-Meta': 'false' };
-                // If your bin is private, uncomment and replace the key below:
-                // if (JSON_BIN_MASTER_KEY !== '$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O') headers['X-Master-Key'] = JSON_BIN_MASTER_KEY;
+      async function loadData() {
+  try {
+    const url = `https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest`;
+    const headers = { 'X-Bin-Meta': 'false' };
+    const response = await fetch(url, { method: 'GET', headers });
 
-                const response = await fetch(url, { method: 'GET', headers: headers });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+// ✅ JSONBin returns { record: [...] } or an array directly
+const raw = data.record || data;
+const courses = Array.isArray(raw) ? raw : [raw];
 
-                let data = await response.json();
+    // ✅ JSONBin returns { record: [...] }
+    const courses = Array.isArray(data.record) ? data.record : [data.record];
 
-                // FIX: Access the first object in the array structure required by your BIN
-                const eventData = Array.isArray(data) && data.length > 0 ? data[0] : data;
+    // ===============================
+    // 1️⃣ Populate the Course Dropdown
+    // ===============================
+    const courseSelect = document.getElementById("courseSelect");
+    courseSelect.innerHTML = '<option value="">Select a course</option>';
 
-                if (!eventData || !eventData.groups || !eventData.course_holes || !eventData.course_name) {
-                    throw new Error("Invalid structure: Missing 'groups', 'course_holes', or 'course_name' in JSON.");
-                }
+    courses.forEach((course, index) => {
+      if (course.course_name) {
+        const opt = document.createElement("option");
+        opt.value = index; // store index instead of name for lookup later
+        opt.textContent = course.course_name;
+        courseSelect.appendChild(opt);
+      }
+    });
 
-                // --- MAP LIVE DATA TO GLOBAL VARIABLES ---
-                COURSE_NAME = eventData.course_name;
-                COURSE_HOLES_DATA = eventData.course_holes; // Array of { par, yards, hcp }
+    // ===============================
+    // 2️⃣ Handle Course Selection
+    // ===============================
+    courseSelect.addEventListener("change", (e) => {
+      const selectedIndex = e.target.value;
+      if (selectedIndex === "") return;
 
-                // Transform the group array into the key/value object the existing code expects
-                GROUPS_DATA = eventData.groups.reduce((acc, group) => {
-                    // Find the scorekeeper indices based on name
-                    const scorekeeperNames = [group.scorekeeper1, group.scorekeeper2];
-                    const scorekeepers = scorekeeperNames.map(name =>
-                        group.players.findIndex(p => p.name === name)
-                    ).filter(index => index !== -1);
+      const selectedCourse = courses[selectedIndex];
+      COURSE_NAME = selectedCourse.course_name;
+      COURSE_HOLES_DATA = selectedCourse.course_holes || [];
 
-                    acc[`group${group.group_number}`] = {
-                        name: `Group ${group.group_number} - ${group.tee_time}`,
-                        players: group.players.map(p => p.name),
-                        scorekeepers: scorekeepers // Store as indices for quick lookups
-                    };
-                    return acc;
-                }, {});
+      // Map the selected course’s groups
+      GROUPS_DATA = selectedCourse.groups.reduce((acc, group) => {
+        const scorekeeperNames = [group.scorekeeper1, group.scorekeeper2];
+        const scorekeepers = scorekeeperNames
+          .map((name) => group.players.findIndex((p) => p.name === name))
+          .filter((index) => index !== -1);
 
-                dataLoaded = true;
-                
-            } catch (error) {
-                console.error("Error loading event data:", error);
-                // Display the error in the group-select dropdown
-                const select = document.getElementById('group-select');
-                select.innerHTML = '<option value="">❌ Error: Course data missing/invalid.</option>';
-                select.disabled = true;
-                document.getElementById('start-btn').disabled = true;
-                return;
-            }
-            
-            // Now that data is loaded, populate the group dropdown
-            populateGroupDropdown();
-            updateStartButton();
-        }
+        acc[`group${group.group_number}`] = {
+          name: `Group ${group.group_number} - ${group.tee_time}`,
+          players: group.players.map((p) => p.name),
+          scorekeepers,
+        };
+        return acc;
+      }, {});
+
+      // Update the group dropdown + UI
+      populateGroupDropdown();
+      document.querySelector('.course-header strong').textContent = COURSE_NAME;
+      updateStartButton();
+    });
+
+    dataLoaded = true;
+  } catch (error) {
+    console.error("Error loading courses:", error);
+    const courseSelect = document.getElementById("courseSelect");
+    courseSelect.innerHTML = '<option>Error loading courses</option>';
+  }
+}
+
 
         // Initial data load when the page is ready
         document.addEventListener('DOMContentLoaded', () => {
@@ -963,6 +976,8 @@
     showView('play');
     document.getElementById('bottom-nav').classList.remove('hidden');
     updateHoleDisplay();
+    startAutoVerification();
+
 }
 
 
@@ -1172,12 +1187,34 @@
             }
         }
 
-        function nextHole() {
-            if (currentHole < 17) {
-                currentHole++;
-                updateHoleDisplay();
-            }
-        }
+async function nextHole() {
+  const playerName = GROUPS_DATA[selectedGroup].players[currentScoringPlayer];
+  const keeperName = `Keeper ${keeperIndex + 1}`;
+  const currentData = groupScores[currentScoringPlayer][currentHole][`keeper${keeperIndex}`] || {};
+
+  // ✅ Save this hole’s data
+  await saveScoreToJSONBin(
+    currentHole + 1,
+    playerName,
+    currentData.score || 0,
+    currentData.putts || 0,
+    currentData.fairway || 'N/A',
+    keeperName
+  );
+
+  // ✅ Move to next hole
+  if (currentHole < 17) {
+    currentHole++;
+    updateHoleDisplay();
+  }
+
+  // ✅ Restart auto-verification to check for the new hole
+  startAutoVerification();
+}
+
+
+
+
 
         function previousHole() {
             if (currentHole > 0) {
@@ -1257,6 +1294,8 @@
             const index = ['setup', 'play', 'scorecard', 'stats', 'live'].indexOf(viewName);
             if (navItems[index]) navItems[index].classList.add('active');
             
+
+
             if (viewName === 'scorecard') {
                 updateGroupScorecard();
             }
@@ -1270,6 +1309,8 @@
                 startLiveRefresh();
             } else {
                 stopLiveRefresh();
+            if (viewName !== 'play') stopAutoVerification();
+
             }
         }
 
@@ -1528,33 +1569,133 @@
             }
         }, 3000);
     </script>
-   <script>
-const courseSelect = document.getElementById("courseSelect");
-const binUrl = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest"; // replace with your actual bin id
-const masterKey = "$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O"; // add your key here if private, else leave blank
 
-fetch(binUrl, masterKey ? { headers: { "X-Master-Key": masterKey } } : {})
-  .then(res => {
-    if (!res.ok) throw new Error("Network response not ok");
-    return res.json();
-  })
-  .then(data => {
-    // JSONBin v3 returns: { record: [...] }
-    const courses = data.record;
-    if (!Array.isArray(courses)) throw new Error("Invalid data format");
+<script>
+async function saveScoreToJSONBin(holeNumber, playerName, score, putts, fairway, scorekeeperName) {
+  const BIN_ID = '68f6557dae596e708f1f69d1'; // same BIN as your pairings
+  const API_KEY = '$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O';
+  const url = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
 
-    courseSelect.innerHTML = '<option value="">Select a course</option>';
-    courses.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c.course_name;
-      opt.textContent = c.course_name;
-      courseSelect.appendChild(opt);
-    });
-  })
-  .catch(err => {
-    console.error("Error loading courses:", err);
-    courseSelect.innerHTML = '<option>Error loading courses</option>';
-  });
+  try {
+    // 1️⃣ Fetch existing data
+    const res = await fetch(url, { headers: { 'X-Master-Key': API_KEY } });
+    const data = await res.json();
+    let recordArray = Array.isArray(data.record) ? data.record : [data.record];
+let record = recordArray[0] || {};
+
+
+
+    // 2️⃣ Ensure 'scores' property exists in your main record
+    if (!record.scores) record.scores = {};
+
+    const groupKey = selectedGroup; // e.g. "group1"
+    const holeKey = `hole${holeNumber}`;
+
+    // 3️⃣ Ensure nested objects exist
+    if (!record.scores[groupKey]) record.scores[groupKey] = {};
+    if (!record.scores[groupKey][holeKey]) record.scores[groupKey][holeKey] = {};
+    if (!record.scores[groupKey][holeKey][playerName]) record.scores[groupKey][holeKey][playerName] = {};
+
+    // 4️⃣ Add or update the scorekeeper’s data for that player & hole
+    record.scores[groupKey][holeKey][playerName][scorekeeperName] = {
+      score,
+      putts,
+      fairway,
+      updatedAt: new Date().toISOString()
+    };
+
+    // 5️⃣ Merge back into the same BIN (without overwriting course data)
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Master-Key': API_KEY
+  },
+  body: JSON.stringify([record]) // ✅ Wrap back in array
+});
+
+
+    // 6️⃣ Check if both scorekeepers have entered data
+    const playerData = record.scores[groupKey][holeKey][playerName];
+    const keepers = Object.keys(playerData);
+    const verification = document.getElementById('verification-display');
+
+    if (keepers.length === 2 && playerData['Keeper 1'] && playerData['Keeper 2']) {
+      const match = playerData['Keeper 1'].score === playerData['Keeper 2'].score;
+      verification.innerHTML = `
+        <div class="verification-status ${match ? 'verified' : 'mismatch'}">
+          ${match ? '✅ Both scorekeepers agree!' : `⚠️ Mismatch: K1=${playerData['Keeper 1'].score}, K2=${playerData['Keeper 2'].score}`}
+        </div>
+      `;
+    } else {
+      verification.innerHTML = `
+        <div class="verification-status pending">
+          ⏳ Waiting for second scorekeeper
+        </div>
+      `;
+    }
+
+    console.log(`✅ Saved ${playerName} hole ${holeNumber} by ${scorekeeperName}`);
+      startAutoVerification(); // triggers immediate refresh
+  } catch (err) {
+    console.error('❌ JSONBin merge failed:', err);
+  }
+
+}
+
+</script>
+<script>
+let verificationInterval = null;
+
+function startAutoVerification() {
+  // clear any existing interval before starting a new one
+  if (verificationInterval) clearInterval(verificationInterval);
+
+  verificationInterval = setInterval(async () => {
+    const BIN_ID = '68f6557dae596e708f1f69d1';
+    const API_KEY = '$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O';
+    const url = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+
+    try {
+      const res = await fetch(url, { headers: { 'X-Master-Key': API_KEY } });
+      const data = await res.json();
+      let recordArray = Array.isArray(data.record) ? data.record : [data.record];
+let record = recordArray[0] || {};
+
+      if (!record.scores) return;
+
+      const groupKey = selectedGroup;
+      const holeKey = `hole${currentHole + 1}`;
+      const playerName = GROUPS_DATA[selectedGroup].players[currentScoringPlayer];
+      const playerData = record.scores?.[groupKey]?.[holeKey]?.[playerName];
+      const verification = document.getElementById('verification-display');
+
+      if (!playerData) return;
+
+      const keepers = Object.keys(playerData);
+      if (keepers.length === 2 && playerData['Keeper 1'] && playerData['Keeper 2']) {
+        const match = playerData['Keeper 1'].score === playerData['Keeper 2'].score;
+        verification.innerHTML = `
+          <div class="verification-status ${match ? 'verified' : 'mismatch'}">
+            ${match ? '✅ Both scorekeepers agree!' :
+              `⚠️ Mismatch: K1=${playerData['Keeper 1'].score}, K2=${playerData['Keeper 2'].score}`}
+          </div>`;
+      } else {
+        verification.innerHTML = `
+          <div class="verification-status pending">
+            ⏳ Waiting for second scorekeeper
+          </div>`;
+      }
+    } catch (err) {
+      console.error('Auto verification failed:', err);
+    }
+  }, 3000); // refresh every 3 seconds
+}
+
+function stopAutoVerification() {
+  if (verificationInterval) clearInterval(verificationInterval);
+  verificationInterval = null;
+}
 </script>
 
 

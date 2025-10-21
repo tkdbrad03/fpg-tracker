@@ -16,16 +16,10 @@
     }
   </style>
 </head>
-
-<body class="flex flex-col items-center min-h-screen">
-
-  <!-- Top Header Bar -->
-  <header class="w-full bg-gradient-to-r from-[#3c763d] to-[#2d5a2e] py-4 text-center text-white shadow">
-    <h1 class="text-xl font-bold tracking-wide">Florida Players Group</h1>
-  </header>
+<body class="flex flex-col items-center justify-center min-h-screen">
 
   <!-- Logo -->
-  <div class="mt-8 mb-6">
+  <div class="mb-6">
     <img 
       src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
       alt="FPG Logo"
@@ -56,7 +50,7 @@
   </div>
 
   <!-- Continue Button -->
-  <div class="mt-6 text-center mb-12">
+  <div class="mt-6 text-center">
     <button 
       id="continue-btn" 
       class="py-2 px-6 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
@@ -67,7 +61,6 @@
 
   <!-- Script -->
   <script>
-    // JSONBin URL containing your pairings
     const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
     let courses = [];
@@ -83,6 +76,7 @@
         const res = await fetch(BIN_URL);
         const data = await res.json();
 
+        // Handle all JSONBin formats
         courses = (data.record?.[0]?.record) || (data[0]?.record) || data.record || data;
 
         const courseSelect = document.getElementById("course-select");
@@ -171,12 +165,12 @@
         return;
       }
 
-      // Save selections
+      // Save user selection in localStorage for use in scorekeeping screen
       localStorage.setItem("selectedCourse", JSON.stringify(selectedCourse));
       localStorage.setItem("selectedGroup", selectedGroup);
       localStorage.setItem("isScorekeeper", isScorekeeper);
 
-      // Redirect
+      // Redirect to scorekeeping page
       window.location.href = "fpg-tracker.html";
     });
 

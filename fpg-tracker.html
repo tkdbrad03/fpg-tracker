@@ -1,333 +1,417 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>FPG Scorekeeper</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  :root{--fpg:#3c763d}
-  .tab-active{color:#1f2937;background:#d4edda}
-  .dot{display:inline-block;width:.5rem;height:.5rem;border-radius:9999px;background:#16a34a;margin-left .25rem}
-  .scroll-snap-x{scroll-snap-type:x mandatory}
-  .snap{scroll-snap-align:start}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FPG Live Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-enter { opacity: 0; transform: translateY(6px); }
+    .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 160ms ease, transform 160ms ease; }
+    .tab-active { border-bottom: 2px solid #14532d; color: #14532d; font-weight: 700; }
+    .stroke-dot { font-weight: 700; line-height: 1; }
+    .num-btn { @apply rounded-md px-3 py-2 border border-gray-300 hover:bg-gray-50 text-sm; }
+    .num-btn.active { background: #14532d; color: #fff; border-color: #14532d; }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
 
-<!-- ===== Header (course / group / role) ===== -->
-<header class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b">
-  <div class="max-w-4xl mx-auto px-4 py-3">
-    <h1 id="hdrCourse" class="text-2xl font-extrabold text-gray-900">Course</h1>
-    <p class="text-sm text-gray-600">
-      <span id="hdrGroup">Group</span> • <span id="hdrRole">Role</span>
-    </p>
-  </div>
-</header>
-
-<!-- ===== Hole banner ===== -->
-<section class="bg-white border-b">
-  <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-    <div class="flex gap-6">
-      <div><div class="text-xs text-gray-500">Hole</div><div id="holeNum" class="font-semibold text-lg">1</div></div>
-      <div><div class="text-xs text-gray-500">Par</div><div id="holePar" class="font-semibold text-lg">4</div></div>
-      <div><div class="text-xs text-gray-500">Stroke</div><div id="holeHcp" class="font-semibold text-lg">11</div></div>
+  <!-- Header -->
+  <header class="sticky top-0 z-10 bg-white shadow-sm">
+    <div class="max-w-xl mx-auto px-4 py-3">
+      <div class="text-center">
+        <h1 id="courseName" class="text-xl font-bold text-gray-900"></h1>
+        <p class="text-sm text-gray-600 mt-1">
+          <span id="groupLine">Group —</span>
+          •
+          <span id="frontBadge" class="ml-1 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">Front 9 ⏳</span>
+          <span id="backBadge" class="ml-1 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">Back 9 ⏳</span>
+        </p>
+      </div>
     </div>
-    <div class="flex gap-2">
-      <button id="prevHole" class="px-3 py-1 rounded border text-sm">Prev</button>
-      <button id="nextHole" class="px-3 py-1 rounded border text-sm bg-green-600 text-white border-green-600">Next</button>
+  </header>
+
+  <!-- Hole Bar -->
+  <section class="max-w-xl mx-auto px-4 mt-3">
+    <div id="holeBar" class="bg-white shadow-sm rounded-lg p-3 flex items-center justify-between">
+      <div>
+        <div class="text-xs text-gray-500">Hole</div>
+        <div id="holeNum" class="text-lg font-semibold text-gray-900">1</div>
+      </div>
+      <div class="text-center">
+        <div class="text-xs text-gray-500">Par</div>
+        <div id="holePar" class="text-lg font-semibold text-gray-900">4</div>
+      </div>
+      <div class="text-right">
+        <div class="text-xs text-gray-500">Stroke Index</div>
+        <div id="holeHcp" class="text-lg font-semibold text-gray-900">11</div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ===== Tabs ===== -->
-<nav class="bg-white border-b">
-  <div class="max-w-4xl mx-auto px-1 grid grid-cols-3">
-    <button data-tab="play" class="tab-active px-3 py-2 text-center text-sm font-semibold">Play</button>
-    <button data-tab="card" class="px-3 py-2 text-center text-sm font-semibold">Card</button>
-    <button data-tab="live" class="px-3 py-2 text-center text-sm font-semibold">Live</button>
-  </div>
-</nav>
+  <!-- Players Grid -->
+  <main class="max-w-xl mx-auto px-4 mt-3">
+    <div id="playersWrap" class="space-y-3"></div>
+  </main>
 
-<!-- ===== Views ===== -->
-<main class="max-w-4xl mx-auto p-4 space-y-6">
-
-  <!-- PLAY -->
-  <section id="view-play" class="space-y-4">
-    <!-- players -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="playerGrid"></div>
-
-    <!-- score pad -->
-    <div class="bg-white rounded-xl shadow p-4">
-      <div class="text-sm text-gray-500 mb-1">Entering score for</div>
-      <div id="activePlayerLabel" class="font-semibold text-lg mb-3">—</div>
-
-      <div class="text-sm text-gray-600 mb-1">Score</div>
-      <div id="scorePad" class="grid grid-cols-10 gap-2">
-        <!-- buttons injected -->
+  <!-- Bottom Controls -->
+  <footer class="max-w-xl mx-auto px-4 py-3 mt-4">
+    <div class="bg-white rounded-lg shadow-sm p-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <button id="prevHole" class="px-3 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-50">← Prev</button>
+          <button id="nextHole" class="px-3 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-50">Next →</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="tabFront" class="px-3 py-2 text-sm rounded-md">Front 1–9</button>
+          <button id="tabBack" class="px-3 py-2 text-sm rounded-md">Back 10–18</button>
+        </div>
       </div>
 
-      <div id="netNote" class="mt-3 text-sm text-gray-600"></div>
+      <!-- Verify row -->
+      <div class="mt-3 border-t pt-3 flex items-center justify-between">
+        <div class="text-xs text-gray-500">Verification (two keepers required)</div>
+        <div class="flex items-center gap-2">
+          <button id="verifyFrontBtn" class="px-3 py-1.5 text-xs rounded-md border border-gray-300 hover:bg-gray-50">Verify Front 9</button>
+          <button id="verifyBackBtn" class="px-3 py-1.5 text-xs rounded-md border border-gray-300 hover:bg-gray-50">Verify Back 9</button>
+        </div>
+      </div>
     </div>
-  </section>
+  </footer>
 
-  <!-- CARD -->
-  <section id="view-card" class="hidden">
-    <div class="bg-white rounded-xl shadow overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-green-100/70 text-gray-800 sticky top-0">
-          <tr id="cardHeadRow"></tr>
-        </thead>
-        <tbody id="cardBody"></tbody>
-      </table>
-    </div>
-  </section>
+  <script>
+    // ======= CONFIG / CONSTANTS =======
+    const BIN_ID = '68f6557dae596e708f1f69d1';
+    const BIN_LATEST_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+    const BIN_WRITE_URL  = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    // If your bin requires a key for PUTs, fill it in here:
+    const JSONBIN_KEY = '$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O';
 
-  <!-- LIVE -->
-  <section id="view-live" class="hidden space-y-3">
-    <div id="liveList" class="space-y-3"></div>
-    <div class="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 text-sm">
-      <b>How it works:</b> Stableford points are computed automatically from the gross score and any stroke(s) the player receives on a hole. Verification between scorekeepers can be applied later (9/18-hole attest).
-    </div>
-  </section>
+    // ======= STATE FROM START SCREEN =======
+    const selectedCourse = JSON.parse(localStorage.getItem('selectedCourse')); // full course object from pairings
+    const selectedGroupIndex = parseInt(localStorage.getItem('selectedGroup'), 10);
+    const isScorekeeper = JSON.parse(localStorage.getItem('isScorekeeper'));
+    if (!selectedCourse || Number.isNaN(selectedGroupIndex)) {
+      alert('Missing setup info. Please start from the index page.');
+      window.location.href = 'index.html';
+    }
 
-</main>
+    // Ask name (used to tag keeper entries)
+    let keeperName = localStorage.getItem('keeperName') || '';
+    async function ensureKeeperName() {
+      if (keeperName && keeperName.trim()) return;
+      const guess = (selectedCourse.groups?.[selectedGroupIndex]?.scorekeeper1) || '';
+      const input = prompt('Enter your name (for verification)', guess);
+      keeperName = (input || 'Keeper').trim();
+      localStorage.setItem('keeperName', keeperName);
+    }
 
-<script>
-/* ========= helpers ========= */
-const $ = (q) => document.querySelector(q);
-const el = (t, cls='') => { const x=document.createElement(t); if(cls) x.className=cls; return x; };
+    // ======= DERIVED STATE =======
+    const group = selectedCourse.groups[selectedGroupIndex];
+    const courseName = selectedCourse.course_name;
+    const groupKey = `group${group.group_number}`;
+    const players = group.players || []; // [{name, handicap}]
+    // “handicap” here means strokes given for the day (we cap at 18)
+    const strokesGiven = (p) => Math.max(0, Math.min(18, Number(p.handicap || 0)));
 
-function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
-function stablefordPoints(gross, par, netStrokes=0){
-  if(!gross||!par) return 0;
-  const net = gross - netStrokes;
-  const diff = net - par;
-  if(diff<=-3) return 5; // albatross
-  if(diff===-2) return 4; // eagle
-  if(diff===-1) return 3; // birdie
-  if(diff===0)  return 2; // par
-  if(diff===1)  return 1; // bogey
-  return 0;               // double or higher
-}
+    // UI refs
+    const courseNameEl = document.getElementById('courseName');
+    const groupLineEl = document.getElementById('groupLine');
+    const frontBadgeEl = document.getElementById('frontBadge');
+    const backBadgeEl  = document.getElementById('backBadge');
+    const holeNumEl = document.getElementById('holeNum');
+    const holeParEl = document.getElementById('holePar');
+    const holeHcpEl = document.getElementById('holeHcp');
+    const playersWrap = document.getElementById('playersWrap');
 
-/* ========= state ========= */
-let SELECTED_COURSE = null;      // object from localStorage
-let SELECTED_GROUP_INDEX = null; // number (string saved)
-let IS_SCOREKEEPER = false;
+    const prevHoleBtn = document.getElementById('prevHole');
+    const nextHoleBtn = document.getElementById('nextHole');
+    const tabFrontBtn = document.getElementById('tabFront');
+    const tabBackBtn = document.getElementById('tabBack');
+    const verifyFrontBtn = document.getElementById('verifyFrontBtn');
+    const verifyBackBtn  = document.getElementById('verifyBackBtn');
 
-let courseName = '';
-let group = null;                // selected group object
-let holes = [];                  // [{par,hcp},...18]
-let players = [];                // [{name, handicap?}, ...]
-let currentHole = 0;             // 0..17
-let activeIdx = 0;               // player index active
+    // holeIndex: 0..17
+    let holeIndex = 0;
+    let frontVerifiedBy = new Set(); // names who verified front
+    let backVerifiedBy  = new Set(); // names who verified back
 
-// scores[playerIdx][holeIdx] = {gross, points}
-let scores = [];
+    // Hole data map (par/hcp) fetched from BIN "courses" object
+    let courseHoles = []; // [{par, hcp}] length 18
 
-/* ========= bootstrap from start screen ========= */
-(function boot(){
-  try{
-    SELECTED_COURSE = JSON.parse(localStorage.getItem('selectedCourse'));
-    SELECTED_GROUP_INDEX = localStorage.getItem('selectedGroup');
-    IS_SCOREKEEPER = JSON.parse(localStorage.getItem('isScorekeeper'));
-  }catch(e){}
-  if(!SELECTED_COURSE || SELECTED_GROUP_INDEX===null){
-    alert('Missing selections. Please choose course & group.');
-    location.href = './';
-    return;
-  }
-  courseName = SELECTED_COURSE.course_name || 'FPG Event';
-  group = SELECTED_COURSE.groups[+SELECTED_GROUP_INDEX];
-  players = (group.players || []).map(p => typeof p==='string' ? ({name:p, handicap:0}) : p);
-  // holes: from JSONBin courses map if present on selectedCourse; else fallback to 18 par-4 with hcp index order
-  if(SELECTED_COURSE.course_holes && SELECTED_COURSE.course_holes.length===18){
-    holes = SELECTED_COURSE.course_holes.map(h => ({par:+h.par, hcp:+h.hcp||+h.stroke_index||1}));
-  } else if(SELECTED_COURSE.courses && SELECTED_COURSE.courses[courseName]) {
-    holes = SELECTED_COURSE.courses[courseName].map(h => ({par:+h.par, hcp:+h.hcp}));
-  } else {
-    holes = Array.from({length:18}, (_,i)=>({par:4, hcp:i+1}));
-  }
+    // Local cache of scores we read from Bin
+    let binData = null;
 
-  // init scores
-  scores = players.map(()=> holes.map(()=>({gross:null, points:0})));
+    // ======= HELPERS =======
+    function isFront() { return holeIndex < 9; }
+    function clampHole(i) { return Math.max(0, Math.min(17, i)); }
+    function fadeIn(el) {
+      el.classList.add('fade-enter');
+      requestAnimationFrame(() => {
+        el.classList.add('fade-enter-active');
+        setTimeout(() => {
+          el.classList.remove('fade-enter', 'fade-enter-active');
+        }, 180);
+      });
+    }
 
-  // header
-  $('#hdrCourse').textContent = courseName;
-  $('#hdrGroup').textContent = `Group ${group.group_number || ( +SELECTED_GROUP_INDEX + 1)} – ${group.tee_time || ''}`;
-  $('#hdrRole').textContent = IS_SCOREKEEPER ? 'Scorekeeper' : 'Player';
+    // Allocate a stroke on holes whose stroke index <= strokesGiven
+    function getsStrokeOnHole(player, holeIdx) {
+      const h = strokesGiven(player);
+      if (!courseHoles[holeIdx]) return false;
+      const si = Number(courseHoles[holeIdx].hcp);
+      return h > 0 && si <= h;
+    }
 
-  // build UI
-  buildPlayers();
-  buildScorePad();
-  buildCardSkeleton();
-  updateHoleBanner();
-  selectPlayer(0);
-  renderCard();
-  renderLive();
-})();
+    // Stableford (net = gross - (stroke?1:0))
+    function stablefordPoints(gross, par, strokeApplied) {
+      if (!gross || !par) return 0;
+      const net = gross - (strokeApplied ? 1 : 0);
+      const diff = net - par;
+      if (diff <= -3) return 5; // albatross+
+      if (diff === -2) return 4; // eagle
+      if (diff === -1) return 3; // birdie
+      if (diff === 0)  return 2; // par
+      if (diff === 1)  return 1; // bogey
+      return 0;                  // double+
+    }
 
-/* ========= UI builders ========= */
-function buildPlayers(){
-  const wrap = $('#playerGrid'); wrap.innerHTML = '';
-  players.forEach((p,idx)=>{
-    const box = el('button','text-left bg-white rounded-xl border shadow-sm px-3 py-2 hover:border-green-600 focus:ring-2 focus:ring-green-600/20');
-    box.dataset.idx = idx;
-    box.addEventListener('click',()=>selectPlayer(idx));
-    const title = el('div','font-semibold');
-    title.textContent = p.name;
-    const meta = el('div','text-xs text-gray-500 mt-0.5 flex items-center gap-1');
-    const h = Math.max(0, Math.round(+p.handicap || 0)); // tiny handicap text
-    meta.textContent = h ? `HCP ${h}` : 'HCP —';
-    // stroke dot placeholder (will toggle per-hole)
-    const dot = el('span'); dot.className='dot'; dot.style.display='none'; dot.title='Stroke on this hole';
-    dot.id = `dot-${idx}`;
-    meta.appendChild(dot);
+    function holeKey(n) { return `hole${n}`; } // 1..18
 
-    box.appendChild(title);
-    box.appendChild(meta);
-    wrap.appendChild(box);
-  });
-}
+    // ======= RENDER =======
+    function updateHeaderBadges() {
+      // Both keepers must verify per side to flip to ✅
+      const frontDone = (binData?.verifications?.[groupKey]?.front) || {};
+      const backDone  = (binData?.verifications?.[groupKey]?.back)  || {};
 
-function buildScorePad(){
-  const pad = $('#scorePad'); pad.innerHTML='';
-  for(let n=1;n<=10;n++){
-    const b=el('button','border rounded py-2 text-sm hover:bg-gray-100');
-    b.textContent = n;
-    b.addEventListener('click', ()=>setScore(n));
-    pad.appendChild(b);
-  }
-}
+      const frontKeepers = Object.keys(frontDone).filter(k => frontDone[k] === true);
+      const backKeepers  = Object.keys(backDone).filter(k => backDone[k] === true);
 
-function buildCardSkeleton(){
-  const head = $('#cardHeadRow'); head.innerHTML='';
-  ;['Hole','Par', ...players.map(p=>p.name.split(' ')[0])].forEach(txt=>{
-    const th=el('th','px-3 py-2 text-left font-semibold'); th.textContent=txt; head.appendChild(th);
-  });
-}
+      const frontOk = frontKeepers.length >= 2;
+      const backOk  = backKeepers.length >= 2;
 
-/* ========= per-hole UI updates ========= */
-function updateHoleBanner(){
-  const h = holes[currentHole] || {par:4,hcp:1};
-  $('#holeNum').textContent = currentHole+1;
-  $('#holePar').textContent = h.par;
-  $('#holeHcp').textContent = h.hcp;
+      frontBadgeEl.textContent = frontOk ? 'Front 9 ✅' : 'Front 9 ⏳';
+      frontBadgeEl.className = frontOk
+        ? 'ml-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800'
+        : 'ml-1 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800';
 
-  // stroke dot toggles for each player
-  players.forEach((p,idx)=>{
-    const given = strokeGivenFor(p, h.hcp);
-    const dot = $(`#dot-${idx}`);
-    if(dot) dot.style.display = given ? 'inline-block' : 'none';
-  });
+      backBadgeEl.textContent = backOk ? 'Back 9 ✅' : 'Back 9 ⏳';
+      backBadgeEl.className = backOk
+        ? 'ml-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800'
+        : 'ml-1 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800';
+    }
 
-  renderCard(); // keep table header row sticky but body values reflect current known
-  renderLive();
-}
+    function renderHoleBar() {
+      const hData = courseHoles[holeIndex] || { par: '-', hcp: '-' };
+      holeNumEl.textContent = (holeIndex + 1);
+      holeParEl.textContent = hData.par;
+      holeHcpEl.textContent = hData.hcp;
+      fadeIn(document.getElementById('holeBar'));
+    }
 
-function selectPlayer(idx){
-  activeIdx = idx;
-  const p = players[idx];
-  $('#activePlayerLabel').textContent = p.name;
-  // highlight
-  [...document.querySelectorAll('#playerGrid > button')].forEach((b,i)=>{
-    b.classList.toggle('ring-2', i===idx);
-    b.classList.toggle('ring-green-600', i===idx);
-  });
+    function renderPlayers() {
+      playersWrap.innerHTML = '';
+      const hData = courseHoles[holeIndex] || { par: null, hcp: null };
+      const par = Number(hData.par || 0);
 
-  const h = holes[currentHole];
-  const netStrokes = strokeGivenFor(p, h.hcp);
-  $('#netNote').textContent = netStrokes ? `This hole: receives ${netStrokes} stroke${netStrokes>1?'s':''}.` : 'This hole: no stroke.';
-}
+      // Existing scores for this hole
+      const scoresRoot = binData?.scores?.[groupKey]?.[holeKey(holeIndex + 1)] || {};
 
-/* ========= strokes logic ========= */
-// Max 18 strokes; allocate 1 on holes with stroke index <= strokesGiven (and one extra round if >18, but we cap).
-function totalStrokesGivenFor(player){
-  // if you later store an explicit "strokes_given" on player, prefer that and cap to 18.
-  const hcpNum = Math.round(+player.handicap || 0);
-  return clamp(hcpNum, 0, 18);
-}
-function strokeGivenFor(player, holeHcp){
-  const s = totalStrokesGivenFor(player);
-  return s>0 && holeHcp <= s ? 1 : 0;
-}
+      players.forEach((p, idx) => {
+        const strokeApplies = getsStrokeOnHole(p, holeIndex);
+        const dot = strokeApplies ? '<span class="stroke-dot" aria-hidden="true">•</span>' : '';
+        const hcap = strokesGiven(p);
 
-/* ========= scoring ========= */
-function setScore(gross){
-  scores[activeIdx][currentHole].gross = gross;
-  const par = holes[currentHole].par;
-  const netStrokes = strokeGivenFor(players[activeIdx], holes[currentHole].hcp);
-  scores[activeIdx][currentHole].points = stablefordPoints(gross, par, netStrokes);
-  renderCard();
-  renderLive();
-}
+        // Determine the "current" gross score we show for this player (prefer consensus if exists,
+        // otherwise show this keeper's entry if present)
+        const playerNode = scoresRoot[p.name] || {};
+        const keeperGross = playerNode[keeperName]?.score || null;
 
-/* ========= renderers ========= */
-function renderCard(){
-  const body = $('#cardBody'); body.innerHTML='';
-  holes.forEach((h,hi)=>{
-    const tr = el('tr', hi%2? 'bg-white' : 'bg-gray-50');
-    const c1 = el('td','px-3 py-2 font-semibold'); c1.textContent = hi+1; tr.appendChild(c1);
-    const c2 = el('td','px-3 py-2'); c2.textContent = h.par; tr.appendChild(c2);
-    players.forEach((p,pi)=>{
-      const cell = el('td','px-3 py-2');
-      const sc = scores[pi][hi];
-      cell.textContent = sc.gross ?? '—';
-      // little hourglass for unscored current hole in the example; here we show a tiny dot if stroke applies (reference)
-      if(sc.gross==null && strokeGivenFor(p,h.hcp)){
-        const sdot = el('span'); sdot.className='dot ml-1 align-middle'; cell.appendChild(sdot);
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-lg shadow-sm p-3 fade-enter';
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="font-semibold text-gray-900">${p.name}</div>
+              <div class="text-xs text-gray-500">Handicap: ${hcap}</div>
+            </div>
+            <div class="text-sm text-gray-600">${dot}</div>
+          </div>
+
+          <div class="mt-2 flex items-center justify-between">
+            <div class="text-xs text-gray-500">Enter score</div>
+            <div class="text-xs text-gray-500">Stableford: <span id="pts-${idx}" class="font-semibold">—</span></div>
+          </div>
+
+          <div class="mt-2 grid grid-cols-10 gap-1">
+            ${Array.from({length: 10}, (_,i) => i+1).map(n => `
+              <button data-player-idx="${idx}" data-score="${n}"
+                class="num-btn ${keeperGross===n ? 'active':''}">${n}</button>
+            `).join('')}
+          </div>
+        `;
+
+        playersWrap.appendChild(card);
+
+        // compute initial points display
+        if (keeperGross) {
+          const pts = stablefordPoints(keeperGross, par, strokeApplies);
+          card.querySelector(`#pts-${idx}`).textContent = pts;
+        }
+        requestAnimationFrame(() => card.classList.add('fade-enter-active'));
+        setTimeout(() => card.classList.remove('fade-enter','fade-enter-active'), 180);
+      });
+
+      // Attach click handlers
+      playersWrap.querySelectorAll('button.num-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const idx = Number(e.currentTarget.dataset.playerIdx);
+          const score = Number(e.currentTarget.dataset.score);
+          await saveScore(players[idx], score);
+          // Refresh visuals
+          await refreshFromBin(false);
+          renderHoleBar();
+          renderPlayers();
+        });
+      });
+    }
+
+    function updateTabUI() {
+      if (isFront()) {
+        tabFrontBtn.classList.add('tab-active');
+        tabBackBtn.classList.remove('tab-active');
+      } else {
+        tabBackBtn.classList.add('tab-active');
+        tabFrontBtn.classList.remove('tab-active');
       }
-      tr.appendChild(cell);
-    });
-    body.appendChild(tr);
-  });
-}
+    }
 
-function renderLive(){
-  // aggregate Stableford + gross strokes entered so far
-  const rows = players.map((p,pi)=>{
-    let pts=0, strokes=0, holesPlayed=0;
-    scores[pi].forEach(s=>{
-      if(s.gross!=null){ pts+=s.points; strokes+=s.gross; holesPlayed++; }
-    });
-    return {name:p.name, pts, strokes, holesPlayed};
-  }).sort((a,b)=> b.pts - a.pts || a.strokes - b.strokes);
+    // ======= BIN I/O =======
+    async function refreshFromBin(firstLoad = false) {
+      const res = await fetch(BIN_LATEST_URL, { headers: { 'X-Bin-Meta': 'false' } });
+      const data = await res.json();
 
-  const wrap = $('#liveList'); wrap.innerHTML='';
-  rows.forEach((r,idx)=>{
-    const card = el('div','rounded-xl border-l-4 bg-white shadow px-4 py-3 flex items-center');
-    card.style.borderLeftColor = ['#FACC15','#9CA3AF','#B45309'][idx] || '#3c763d';
-    const left = el('div','text-2xl font-extrabold w-10 text-center'); left.textContent = idx+1;
-    const mid = el('div','flex-1');
-    const name = el('div','font-semibold'); name.textContent = r.name;
-    const sub  = el('div','text-xs text-gray-500'); sub.textContent = `Through ${r.holesPlayed} hole${r.holesPlayed===1?'':'s'}`;
-    mid.append(name, sub);
-    const pts = el('div','text-right');
-    pts.innerHTML = `<div class="text-2xl font-extrabold text-green-700">${r.pts}</div><div class="text-xs text-gray-500">${r.strokes||0} strokes</div>`;
-    card.append(left, mid, pts);
-    wrap.appendChild(card);
-  });
-}
+      // Support multiple wrapping formats:
+      // - {record:{...}}, {record:[...]}, [{record:[...]}]
+      const root = (data.record?.record) || (data.record?.[0]) || (Array.isArray(data) ? data[0]?.record : data.record) || data;
 
-/* ========= nav ========= */
-const tabs = [...document.querySelectorAll('nav [data-tab]')];
-function show(tab){
-  tabs.forEach(b=>b.classList.toggle('tab-active', b.dataset.tab===tab));
-  $('#view-play').classList.toggle('hidden', tab!=='play');
-  $('#view-card').classList.toggle('hidden', tab!=='card');
-  $('#view-live').classList.toggle('hidden', tab!=='live');
-}
-tabs.forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));
+      // Expect:
+      //   root.courses[courseName] -> [{par,hcp} x18]
+      //   root.scores[groupKey][holeN][playerName][keeperName] = {score, updatedAt}
+      //   root.verifications[groupKey].front[keeperName] = true/false
+      //   root.verifications[groupKey].back[keeperName]  = true/false
+      binData = root || {};
+      courseHoles = (binData.courses?.[courseName]) || [];
 
-$('#prevHole').addEventListener('click',()=>{
-  currentHole = Math.max(0, currentHole-1);
-  updateHoleBanner();
-});
-$('#nextHole').addEventListener('click',()=>{
-  currentHole = Math.min(17, currentHole+1);
-  updateHoleBanner();
-});
-</script>
+      if (firstLoad && courseHoles.length !== 18) {
+        console.warn('Course holes missing or not 18; falling back to par/hcp unknown.');
+      }
+    }
+
+    async function putBin(updatedRoot) {
+      await fetch(BIN_WRITE_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(JSONBIN_KEY ? {'X-Master-Key': JSONBIN_KEY} : {})
+        },
+        body: JSON.stringify([updatedRoot]) // keep array wrapper as you prefer
+      });
+    }
+
+    async function saveScore(player, grossScore) {
+      // Merge our entry into binData, then PUT whole array-wrapped root back
+      const now = new Date().toISOString();
+      const hk = holeKey(holeIndex + 1);
+
+      // Ensure trees
+      binData.scores = binData.scores || {};
+      binData.scores[groupKey] = binData.scores[groupKey] || {};
+      binData.scores[groupKey][hk] = binData.scores[groupKey][hk] || {};
+      binData.scores[groupKey][hk][player.name] = binData.scores[groupKey][hk][player.name] || {};
+
+      binData.scores[groupKey][hk][player.name][keeperName] = {
+        score: grossScore,
+        updatedAt: now
+      };
+
+      await putBin(binData);
+    }
+
+    async function verifySide(side /* 'front'|'back' */) {
+      binData.verifications = binData.verifications || {};
+      binData.verifications[groupKey] = binData.verifications[groupKey] || {};
+      binData.verifications[groupKey][side] = binData.verifications[groupKey][side] || {};
+      binData.verifications[groupKey][side][keeperName] = true;
+      await putBin(binData);
+      await refreshFromBin(false);
+      updateHeaderBadges();
+    }
+
+    // ======= INIT =======
+    (async function init() {
+      await ensureKeeperName();
+
+      // Header fixed info
+      courseNameEl.textContent = courseName;
+      groupLineEl.textContent  = `Group ${group.group_number}`;
+
+      // LoadBin → render
+      await refreshFromBin(true);
+      updateHeaderBadges();
+      renderHoleBar();
+      renderPlayers();
+      updateTabUI();
+
+      // Nav
+      prevHoleBtn.addEventListener('click', () => {
+        holeIndex = clampHole(holeIndex - 1);
+        renderHoleBar(); renderPlayers(); updateTabUI();
+      });
+      nextHoleBtn.addEventListener('click', () => {
+        holeIndex = clampHole(holeIndex + 1);
+        renderHoleBar(); renderPlayers(); updateTabUI();
+      });
+
+      tabFrontBtn.addEventListener('click', () => {
+        holeIndex = 0;
+        renderHoleBar(); renderPlayers(); updateTabUI();
+      });
+      tabBackBtn.addEventListener('click', () => {
+        holeIndex = 9;
+        renderHoleBar(); renderPlayers(); updateTabUI();
+      });
+
+      // Verify buttons — only allow verifying at 9 and 18 (but do NOT gray anything out)
+      verifyFrontBtn.addEventListener('click', async () => {
+        if (holeIndex <= 8) {
+          await verifySide('front');
+        } else {
+          // allow anytime: comment the next line if you want strictly on hole 9
+          await verifySide('front');
+        }
+      });
+      verifyBackBtn.addEventListener('click', async () => {
+        if (holeIndex >= 9) {
+          await verifySide('back');
+        } else {
+          // allow anytime: comment the next line if you want strictly on hole 18
+          await verifySide('back');
+        }
+      });
+
+      // Light polling to reflect partner entries while you play (every 6s)
+      setInterval(async () => {
+        const before = JSON.stringify(binData?.scores?.[groupKey]?.[holeKey(holeIndex+1)] || {});
+        await refreshFromBin(false);
+        const after = JSON.stringify(binData?.scores?.[groupKey]?.[holeKey(holeIndex+1)] || {});
+        if (before !== after) {
+          renderPlayers();
+        }
+        updateHeaderBadges();
+      }, 6000);
+    })();
+  </script>
 </body>
 </html>

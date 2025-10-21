@@ -24,12 +24,10 @@
     </p>
   </header>
 
-  <!-- Placeholder Main Content -->
-  <main class="w-full max-w-2xl bg-white shadow-md rounded-lg p-10 mt-6 text-center">
-    <h2 class="text-lg font-semibold text-gray-700 mb-2">Scorekeeping view coming soon...</h2>
-    <p class="text-gray-500">
-      Once we connect this to your full scoring logic, all your groups and players will load here.
-    </p>
+  <!-- Player List -->
+  <main class="w-full max-w-2xl bg-white shadow-md rounded-lg p-6 mt-6">
+    <h2 class="text-lg font-semibold text-gray-700 mb-4 text-center">Group Players</h2>
+    <div id="playerList" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center"></div>
   </main>
 
   <!-- Script -->
@@ -47,17 +45,64 @@
       window.location.href = "index.html";
     }
 
-    // Extract current group info
     const currentGroup = selectedCourse.groups[selectedGroupIndex];
 
     // ==============================
-    // Populate Course, Group, and Role Info
+    // Populate Header Info
     // ==============================
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("courseNameDisplay").textContent = selectedCourse.course_name;
       document.getElementById("groupInfoDisplay").textContent = `Group ${currentGroup.group_number} - ${currentGroup.tee_time}`;
       document.getElementById("roleDisplay").textContent = isScorekeeper ? "Scorekeeper" : "Player";
+
+      loadPlayerHandicaps();
     });
+
+    // ==============================
+    // Load Handicaps from Google Sheet
+    // ==============================
+    const SHEET_ID = "152dK2m3gluxCdBal9GGLs43aDKFBvy5BiHdnKL3gV4o";
+    const SHEET_NAME = "Player Quotas";
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+    async function loadPlayerHandicaps() {
+      try {
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
+
+        const rows = json.table.rows.map(r => ({
+          name: r.c[0]?.v || "",
+          handicap: r.c[1]?.v || ""
+        }));
+
+        renderPlayers(rows);
+      } catch (err) {
+        console.error("Error loading player handicaps:", err);
+        renderPlayers(); // fallback
+      }
+    }
+
+    // ==============================
+    // Render Player List
+    // ==============================
+    function renderPlayers(handicapData = []) {
+      const playerList = document.getElementById("playerList");
+      playerList.innerHTML = "";
+
+      currentGroup.players.forEach(p => {
+        const match = handicapData.find(h => h.name.trim().toLowerCase() === p.name.trim().toLowerCase());
+        const handicap = match ? match.handicap : "—";
+
+        const playerCard = document.createElement("div");
+        playerCard.className = "bg-gray-50 border border-gray-200 rounded-lg p-3 shadow-sm";
+        playerCard.innerHTML = `
+          <p class="font-semibold text-gray-800">${p.name}</p>
+          <p class="text-sm text-gray-500">Handicap: ${handicap}</p>
+        `;
+        playerList.appendChild(playerCard);
+      });
+    }
   </script>
 </body>
 </html>

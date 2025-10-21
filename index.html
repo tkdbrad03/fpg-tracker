@@ -1120,38 +1120,49 @@ courses.forEach((course, index) => {
         }
 
         function updateVerificationDisplay() {
-            const display = document.getElementById('verification-display');
-            const hole = groupScores[currentScoringPlayer][currentHole];
-            
-            if (!isScorekeeper) {
-                display.innerHTML = '';
-                return;
-            }
-            
-            const hasKeeper0 = hole.keeper0?.score > 0;
-            const hasKeeper1 = hole.keeper1?.score > 0;
-            
-            if (hasKeeper0 && hasKeeper1) {
-                const match = hole.keeper0.score === hole.keeper1.score;
-                display.innerHTML = `
-                    <div class="verification-status ${match ? 'verified' : 'mismatch'}">
-                        ${match ? '✅' : '⚠️'} 
-                        ${match ? 
-                            'Both scorekeepers agree!' : 
-                            `Mismatch: K1=${hole.keeper0.score}, K2=${hole.keeper1.score}`
-                        }
-                    </div>
-                `;
-            } else if (hasKeeper0 || hasKeeper1) {
-                display.innerHTML = `
-                    <div class="verification-status pending">
-                        ⏳ Waiting for second scorekeeper
-                    </div>
-                `;
-            } else {
-                display.innerHTML = '';
-            }
-        }
+  const display = document.getElementById('verification-display');
+  const BIN_ID = '68f6557dae596e708f1f69d1';
+  const API_KEY = '$2a$10$NobB0NeF0o78h06FV0yiWubOB.p9XJhQukdsylN3XYdts3wLQQ6.O';
+  const url = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+
+  fetch(url, { headers: { 'X-Master-Key': API_KEY } })
+    .then(res => res.json())
+    .then(data => {
+      let recordArray = Array.isArray(data.record) ? data.record : [data.record];
+      let record = recordArray[0] || {};
+
+      const groupKey = selectedGroup;
+      const holeKey = `hole${currentHole + 1}`;
+      const playerName = GROUPS_DATA[selectedGroup].players[currentScoringPlayer];
+      const playerData = record.scores?.[groupKey]?.[holeKey]?.[playerName];
+
+      if (!playerData) {
+        display.innerHTML = '';
+        return;
+      }
+
+      const keepers = Object.keys(playerData);
+      if (keepers.length === 2 && playerData['Keeper 1'] && playerData['Keeper 2']) {
+        const match = playerData['Keeper 1'].score === playerData['Keeper 2'].score;
+        display.innerHTML = `
+          <div class="verification-status ${match ? 'verified' : 'mismatch'}">
+            ${match ? '✅ Both scorekeepers agree!' : 
+            `⚠️ Mismatch: K1=${playerData['Keeper 1'].score}, K2=${playerData['Keeper 2'].score}`}
+          </div>`;
+      } else if (keepers.length === 1) {
+        display.innerHTML = `
+          <div class="verification-status pending">
+            ⏳ Waiting for second scorekeeper
+          </div>`;
+      } else {
+        display.innerHTML = '';
+      }
+    })
+    .catch(err => {
+      console.error('Verification check failed:', err);
+    });
+}
+
 
         function updatePlayerStatus(playerIndex) {
             const statusEl = document.getElementById(`player-${playerIndex}-status`);

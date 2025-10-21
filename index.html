@@ -1,69 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FPG Scorekeeper - Tracker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPG Scorekeeper - Start Screen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
       background-color: #f9fafb;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
+    .selected {
+      background-color: #3c763d !important;
+      color: #fff !important;
+    }
   </style>
 </head>
+<body class="flex flex-col items-center justify-center min-h-screen">
 
-<body class="min-h-screen bg-gray-50">
-
-  <!-- ✅ STEP 1: Add at the very top of body -->
-  <!-- Game Info Header -->
-  <div class="text-center bg-white shadow p-4 mb-4 rounded-lg">
-    <h1 class="text-2xl font-bold text-gray-800" id="courseNameDisplay"></h1>
-    <p class="text-gray-600 mt-1">
-      <span id="groupInfoDisplay"></span> • 
-      <span id="roleDisplay"></span>
-    </p>
+  <!-- Logo -->
+  <div class="mb-6">
+    <img 
+      src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
+      alt="FPG Logo"
+      class="w-48 mx-auto"
+    />
   </div>
 
-  <!-- Placeholder for the rest of your tracker UI -->
-  <div class="text-center text-gray-700 mt-12">
-    <h2 class="text-lg font-semibold">Scorekeeping view coming soon...</h2>
-    <p class="text-gray-500 mt-2">Once we connect this to your full scoring logic, all your groups and players will load here.</p>
+  <!-- Scorekeeper Choice -->
+  <div class="text-center mb-8">
+    <h2 class="text-xl font-bold mb-3 text-gray-800">Will you be keeping score today?</h2>
+    <div class="flex justify-center space-x-4">
+      <button id="yes-scorekeeper" class="py-2 px-5 bg-green-600 text-white rounded-md hover:bg-green-700">Yes, I’ll keep score</button>
+      <button id="no-scorekeeper" class="py-2 px-5 bg-gray-400 text-white rounded-md hover:bg-gray-500">No, just playing</button>
+    </div>
   </div>
 
+  <!-- Dropdowns -->
+  <div class="w-full max-w-md bg-white shadow-md rounded-lg p-6">
+    <label for="course-select" class="block text-gray-700 font-semibold mb-2">Choose Course</label>
+    <select id="course-select" class="w-full border border-gray-300 rounded-md p-2 mb-4">
+      <option value="">Loading courses...</option>
+    </select>
+
+    <label for="group-select" class="block text-gray-700 font-semibold mb-2">Choose Group</label>
+    <select id="group-select" class="w-full border border-gray-300 rounded-md p-2">
+      <option value="">Select a course first</option>
+    </select>
+  </div>
+
+  <!-- Continue Button -->
+  <div class="mt-6 text-center">
+    <button 
+      id="continue-btn" 
+      class="py-2 px-6 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
+    >
+      Continue
+    </button>
+  </div>
+
+  <!-- Script -->
   <script>
-    // ✅ STEP 2: Add at the very top of script
-    // ==============================
-    // Load user selections from localStorage
-    // ==============================
-    const selectedCourse = JSON.parse(localStorage.getItem("selectedCourse"));
-    const selectedGroupIndex = localStorage.getItem("selectedGroup");
-    const isScorekeeper = JSON.parse(localStorage.getItem("isScorekeeper"));
+    const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
-    // Safety check — if user skipped setup, send them back
-    if (!selectedCourse || selectedGroupIndex === null) {
-      alert("Missing setup info. Please go back to the start screen.");
-      window.location.href = "index.html";
+    let courses = [];
+    let selectedCourse = null;
+    let selectedGroup = null;
+    let isScorekeeper = false;
+
+    // ==============================
+    // Load Courses from JSONBin
+    // ==============================
+    async function loadCourses() {
+      try {
+        const res = await fetch(BIN_URL);
+        const data = await res.json();
+
+        // Handle all JSONBin formats
+        courses = (data.record?.[0]?.record) || (data[0]?.record) || data.record || data;
+
+        const courseSelect = document.getElementById("course-select");
+        courseSelect.innerHTML = '<option value="">Select a course</option>';
+
+        courses.forEach((c, index) => {
+          const opt = document.createElement("option");
+          opt.value = index;
+          opt.textContent = c.course_name;
+          courseSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Error loading courses:", err);
+      }
     }
 
-    // Extract current group info
-    const currentGroup = selectedCourse.groups[selectedGroupIndex];
-
-    // Make globally accessible
-    window.COURSE_NAME = selectedCourse.course_name;
-    window.GROUP_INFO = currentGroup;
-    window.IS_SCOREKEEPER = isScorekeeper;
-
     // ==============================
-    // Populate Course, Group, and Role Info
+    // When a Course is Selected
     // ==============================
-    window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("courseNameDisplay").textContent = COURSE_NAME;
-      document.getElementById("groupInfoDisplay").textContent = `Group ${GROUP_INFO.group_number} - ${GROUP_INFO.tee_time}`;
-      document.getElementById("roleDisplay").textContent = IS_SCOREKEEPER 
-        ? "Scorekeeper"
-        : "Player";
+    document.getElementById("course-select").addEventListener("change", function() {
+      const index = this.value;
+      const groupSelect = document.getElementById("group-select");
+      groupSelect.innerHTML = "";
+
+      if (index === "") {
+        groupSelect.innerHTML = '<option value="">Select a course first</option>';
+        return;
+      }
+
+      selectedCourse = courses[index];
+      const groups = selectedCourse.groups || [];
+
+      if (groups.length === 0) {
+        groupSelect.innerHTML = '<option value="">No groups found</option>';
+        return;
+      }
+
+      groupSelect.innerHTML = '<option value="">Select a group</option>';
+      groups.forEach((g, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = `Group ${g.group_number} - ${g.tee_time}`;
+        groupSelect.appendChild(opt);
+      });
     });
+
+    // ==============================
+    // Group Selection
+    // ==============================
+    document.getElementById("group-select").addEventListener("change", function() {
+      const val = this.value;
+      selectedGroup = val !== "" ? val : null;
+    });
+
+    // ==============================
+    // Scorekeeper Toggle Buttons
+    // ==============================
+    document.getElementById("yes-scorekeeper").addEventListener("click", function() {
+      isScorekeeper = true;
+      this.classList.add("selected");
+      document.getElementById("no-scorekeeper").classList.remove("selected");
+    });
+
+    document.getElementById("no-scorekeeper").addEventListener("click", function() {
+      isScorekeeper = false;
+      this.classList.add("selected");
+      document.getElementById("yes-scorekeeper").classList.remove("selected");
+    });
+
+    // ==============================
+    // Continue Button
+    // ==============================
+    document.getElementById("continue-btn").addEventListener("click", function() {
+      if (!selectedCourse) {
+        alert("Please select a course before continuing.");
+        return;
+      }
+
+      if (!selectedGroup) {
+        alert("Please select your group before continuing.");
+        return;
+      }
+
+      if (isScorekeeper === null) {
+        alert("Please choose whether you'll be keeping score.");
+        return;
+      }
+
+      // Save user selection in localStorage for use in scorekeeping screen
+      localStorage.setItem("selectedCourse", JSON.stringify(selectedCourse));
+      localStorage.setItem("selectedGroup", selectedGroup);
+      localStorage.setItem("isScorekeeper", isScorekeeper);
+
+      // Redirect to scorekeeping page
+      window.location.href = "fpg-tracker.html";
+    });
+
+    // Initialize
+    loadCourses();
   </script>
 </body>
 </html>

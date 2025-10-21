@@ -66,7 +66,10 @@
       try {
         const res = await fetch(BIN_URL);
         const data = await res.json();
-        courses = data.record;
+        courses = data.record || data;
+        console.log("Loaded courses:", courses);
+
+
 
         const courseSelect = document.getElementById("course-select");
         courseSelect.innerHTML = '<option value="">Select a course</option>';

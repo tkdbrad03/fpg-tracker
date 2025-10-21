@@ -125,25 +125,6 @@
         <div class="pill" id="meta-group">Group</div>
         <div class="pill keepers" id="meta-keepers">K1 & K2</div>
       </div>
-          <!-- Fixed Footer -->
-    <footer style="
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      text-align: center;
-      font-size: 12px;
-      color: #6b7280;
-      background: #ffffffcc;
-      backdrop-filter: blur(6px);
-      padding: 10px 0;
-      border-top: 1px solid #e5e7eb;
-      z-index: 20;
-    ">
-      © <span id="year"></span> Powered by 
-      <strong style="color:#3c763d;">CompliTrst™</strong>
-    </footer>
-
     </div>
 
     <!-- Tabs -->
@@ -695,7 +676,6 @@
 
       await loadCourseMeta();
     })();
-    document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

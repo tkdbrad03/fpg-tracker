@@ -53,7 +53,7 @@
   </div>
 
   <!-- Script -->
-  <script>
+   <script>
     const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
     let courses = [];
@@ -61,20 +61,20 @@
     let selectedGroup = null;
     let isScorekeeper = false;
 
-    // Fetch courses from JSONBin
+    // ==============================
+    // Load Courses from JSONBin
+    // ==============================
     async function loadCourses() {
       try {
         const res = await fetch(BIN_URL);
         const data = await res.json();
+
+        // Handle all JSONBin formats
         courses = (data.record?.[0]?.record) || (data[0]?.record) || data.record || data;
-        console.log("Data received from JSONBin:", data);
-        console.log("Courses parsed:", courses);
-        console.log("Loaded courses:", courses);
-
-
 
         const courseSelect = document.getElementById("course-select");
         courseSelect.innerHTML = '<option value="">Select a course</option>';
+
         courses.forEach((c, index) => {
           const opt = document.createElement("option");
           opt.value = index;
@@ -86,7 +86,9 @@
       }
     }
 
-    // When a course is selected
+    // ==============================
+    // When a Course is Selected
+    // ==============================
     document.getElementById("course-select").addEventListener("change", function() {
       const index = this.value;
       const groupSelect = document.getElementById("group-select");
@@ -99,6 +101,7 @@
 
       selectedCourse = courses[index];
       const groups = selectedCourse.groups || [];
+
       if (groups.length === 0) {
         groupSelect.innerHTML = '<option value="">No groups found</option>';
         return;
@@ -113,28 +116,30 @@
       });
     });
 
-    // Group selection
+    // ==============================
+    // Group Selection
+    // ==============================
     document.getElementById("group-select").addEventListener("change", function() {
       const val = this.value;
       selectedGroup = val !== "" ? val : null;
-      console.log("Selected group:", selectedGroup);
     });
 
-    // Scorekeeper toggle
+    // ==============================
+    // Scorekeeper Toggle Buttons
+    // ==============================
     document.getElementById("yes-scorekeeper").addEventListener("click", function() {
       isScorekeeper = true;
       this.classList.add("selected");
       document.getElementById("no-scorekeeper").classList.remove("selected");
-      console.log("User is scorekeeper");
     });
 
     document.getElementById("no-scorekeeper").addEventListener("click", function() {
       isScorekeeper = false;
       this.classList.add("selected");
       document.getElementById("yes-scorekeeper").classList.remove("selected");
-      console.log("User is not scorekeeper");
     });
 
+    // Initialize
     loadCourses();
   </script>
 </body>

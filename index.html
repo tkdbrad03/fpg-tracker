@@ -51,6 +51,16 @@
       <option value="">Select a course first</option>
     </select>
   </div>
+  <!-- Continue Button -->
+<div class="mt-6 text-center">
+  <button 
+    id="continue-btn" 
+    class="py-2 px-6 bg-fpg-green text-white font-semibold rounded-lg hover:bg-green-700 transition"
+  >
+    Continue
+  </button>
+</div>
+
 
   <!-- Script -->
    <script>
@@ -138,6 +148,34 @@
       this.classList.add("selected");
       document.getElementById("yes-scorekeeper").classList.remove("selected");
     });
+     // ==============================
+// Continue Button
+// ==============================
+document.getElementById("continue-btn").addEventListener("click", function() {
+  if (!selectedCourse) {
+    alert("Please select a course before continuing.");
+    return;
+  }
+
+  if (!selectedGroup) {
+    alert("Please select your group before continuing.");
+    return;
+  }
+
+  if (isScorekeeper === null) {
+    alert("Please choose whether you'll be keeping score.");
+    return;
+  }
+
+  // Save user selection in localStorage for use in scorekeeping screen
+  localStorage.setItem("selectedCourse", JSON.stringify(selectedCourse));
+  localStorage.setItem("selectedGroup", selectedGroup);
+  localStorage.setItem("isScorekeeper", isScorekeeper);
+
+  // Redirect to scorekeeping page
+  window.location.href = "fpg-tracker.html";
+});
+
 
     // Initialize
     loadCourses();

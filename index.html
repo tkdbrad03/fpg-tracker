@@ -60,7 +60,7 @@
   </div>
 
   <!-- Script -->
-  <script>
+    <script>
     const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
     let courses = [];
@@ -78,6 +78,9 @@
 
         // Handle all JSONBin formats
         courses = (data.record?.[0]?.record) || (data[0]?.record) || data.record || data;
+        console.log("Data received from JSONBin:", data);
+console.log("Courses parsed:", courses);
+
 
         const courseSelect = document.getElementById("course-select");
         courseSelect.innerHTML = '<option value="">Select a course</option>';
@@ -146,36 +149,9 @@
       document.getElementById("yes-scorekeeper").classList.remove("selected");
     });
 
-    // ==============================
-    // Continue Button
-    // ==============================
-    document.getElementById("continue-btn").addEventListener("click", function() {
-      if (!selectedCourse) {
-        alert("Please select a course before continuing.");
-        return;
-      }
-
-      if (!selectedGroup) {
-        alert("Please select your group before continuing.");
-        return;
-      }
-
-      if (isScorekeeper === null) {
-        alert("Please choose whether you'll be keeping score.");
-        return;
-      }
-
-      // Save user selection in localStorage for use in scorekeeping screen
-      localStorage.setItem("selectedCourse", JSON.stringify(selectedCourse));
-      localStorage.setItem("selectedGroup", selectedGroup);
-      localStorage.setItem("isScorekeeper", isScorekeeper);
-
-      // Redirect to scorekeeping page
-      window.location.href = "fpg-tracker.html";
-    });
-
     // Initialize
     loadCourses();
   </script>
+
 </body>
 </html>

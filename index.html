@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FPG Scorekeeper - Start Screen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -10,15 +10,13 @@
       background-color: #f9fafb;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    .btn {
-      @apply bg-fpg-green text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition;
-    }
     .selected {
       background-color: #3c763d !important;
       color: #fff !important;
     }
   </style>
 </head>
+
 <body class="flex flex-col items-center justify-center min-h-screen">
 
   <!-- Logo -->
@@ -26,7 +24,7 @@
     <img 
       src="https://raw.githubusercontent.com/tkdbrad03/fpg-scorekeeper/main/fpg-logo.png"
       alt="FPG Logo"
-      class="w-48 mx-auto"
+      class="w-36 mx-auto"
     />
   </div>
 
@@ -51,25 +49,25 @@
       <option value="">Select a course first</option>
     </select>
   </div>
-  <!-- Continue Button -->
-<div class="mt-6 text-center">
-  <button 
-    id="continue-btn" 
-    class="py-2 px-6 bg-fpg-green text-white font-semibold rounded-lg hover:bg-green-700 transition"
-  >
-    Continue
-  </button>
-</div>
 
+  <!-- Continue Button -->
+  <div class="mt-6 text-center">
+    <button 
+      id="continue-btn" 
+      class="py-2 px-6 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition"
+    >
+      Continue
+    </button>
+  </div>
 
   <!-- Script -->
-   <script>
+  <script>
     const BIN_URL = "https://api.jsonbin.io/v3/b/68f6557dae596e708f1f69d1/latest";
 
     let courses = [];
     let selectedCourse = null;
     let selectedGroup = null;
-    let isScorekeeper = false;
+    let isScorekeeper = null;
 
     // ==============================
     // Load Courses from JSONBin
@@ -148,34 +146,34 @@
       this.classList.add("selected");
       document.getElementById("yes-scorekeeper").classList.remove("selected");
     });
-     // ==============================
-// Continue Button
-// ==============================
-document.getElementById("continue-btn").addEventListener("click", function() {
-  if (!selectedCourse) {
-    alert("Please select a course before continuing.");
-    return;
-  }
 
-  if (!selectedGroup) {
-    alert("Please select your group before continuing.");
-    return;
-  }
+    // ==============================
+    // Continue Button
+    // ==============================
+    document.getElementById("continue-btn").addEventListener("click", function() {
+      if (!selectedCourse) {
+        alert("Please select a course before continuing.");
+        return;
+      }
 
-  if (isScorekeeper === null) {
-    alert("Please choose whether you'll be keeping score.");
-    return;
-  }
+      if (!selectedGroup) {
+        alert("Please select your group before continuing.");
+        return;
+      }
 
-  // Save user selection in localStorage for use in scorekeeping screen
-  localStorage.setItem("selectedCourse", JSON.stringify(selectedCourse));
-  localStorage.setItem("selectedGroup", selectedGroup);
-  localStorage.setItem("isScorekeeper", isScorekeeper);
+      if (isScorekeeper === null) {
+        alert("Please choose whether you'll be keeping score.");
+        return;
+      }
 
-  // Redirect to scorekeeping page
-  window.location.href = "fpg-tracker.html";
-});
+      // Save user selection in localStorage for use in scorekeeping screen
+      localStorage.setItem("selectedCourse", JSON.stringify(selectedCourse));
+      localStorage.setItem("selectedGroup", selectedGroup);
+      localStorage.setItem("isScorekeeper", isScorekeeper);
 
+      // Redirect to scorekeeping page
+      window.location.href = "fpg-tracker.html";
+    });
 
     // Initialize
     loadCourses();
